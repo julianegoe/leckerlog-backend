@@ -78,6 +78,19 @@ app.get('/restaurants/:id', async (req, res) => {
 })
 
 // delete food for restaurant for user
+app.delete('/food/:id', async (req, res) => {
+    try {
+        const client = await pool.connect();
+        const { id } = req.params;
+        const restaurants = await client.query('DELETE from food_ordered WHERE food_id = $1', [id]);
+        res.send('Food was successfully deleted');
+    } catch(error) {
+        console.log(error)
+        res.status(500).send({
+            message: error.message || "Some error occurred.",
+          });
+    }
+})
 
 // delete restaurant for user
 
