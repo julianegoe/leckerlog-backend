@@ -6,9 +6,6 @@ const { Client } = require('pg');
 
 const client = new Client({
   connectionString: process.env.DATABASE_URL,
-  ssl: {
-    rejectUnauthorized: false
-  }
 });
 
 client.connect();
@@ -26,14 +23,16 @@ app.use(cors());
 app.use(express.json());
 
 // routes
-
+app.get('/', (_, res) => {
+    res.send('Hello World')
+})
 // create a restaurant and food
 
 // get alle restaurants and food for user
-app.get('/restaurants', async (req, res) => {
-    const restaurants = await pool.query('SELECT * FROM restaurants');
+/* app.get('/restaurants', async (req, res) => {
+    const restaurants = await pool.query('SELECT * from restaurants');
     res.json(restaurants.rows);
-})
+}) */
 
 // get single restaurant and foods for user
 
@@ -41,4 +40,4 @@ app.get('/restaurants', async (req, res) => {
 
 // delete restaurant for user
 
-app.listen(5000, () => console.log('listening to Port 5000'));
+app.listen(process.env.PORT || 8080, () => console.log('listening to Port' + process.env.PORT));
