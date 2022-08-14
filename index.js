@@ -12,6 +12,21 @@ app.use(express.json());
 app.get('/', (_, res) => {
     res.send('Hello World')
 })
+
+// get all cuisines
+app.get('/cuisines', async (req, res) => {
+    try {
+        const client = await pool.connect();
+        const restaurants = await client.query('SELECT * from cuisines');
+        res.json(restaurants.rows);
+    } catch(error) {
+        console.log(error)
+        res.status(500).send({
+            message: error.message || "Some error occurred.",
+          });
+    }
+})
+
 // create a restaurant record
 app.post('/restaurants', async (req, res) => {
     try {
