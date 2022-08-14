@@ -1,3 +1,4 @@
+require('dotenv').config();
 const express = require('express');
 const app = express();
 const cors = require('cors');
@@ -5,8 +6,11 @@ const pool = require('./database');
 const { Client } = require('pg');
 
 const client = new Client({
-  connectionString: process.env.DATABASE_URL,
-});
+    connectionString: process.env.DATABASE_URL,
+    ssl: {
+        rejectUnauthorized: false
+      }
+  });
 
 client.connect();
 
@@ -35,6 +39,9 @@ app.get('/restaurants', async (req, res) => {
         res.json(restaurants.rows);
     } catch(error) {
         console.log(error)
+        res.status(500).send({
+            message: error.message || "Some error occurred.",
+          });
     }
 })
 

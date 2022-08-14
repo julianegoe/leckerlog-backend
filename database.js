@@ -6,6 +6,7 @@ const pool = new Pool({
     host: process.env.HOST,
     port: process.env.DB_POST,
     databse: process.env.DATABASE,
+    dialect: "postgres",
 }); 
 
 module.exports = pool;
