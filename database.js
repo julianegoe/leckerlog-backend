@@ -9,4 +9,6 @@ const pool = new Pool({
     dialect: "postgres",
 }); 
 
+pool.on('connect', () => console.log('connected to db'));
+
 module.exports = pool;
