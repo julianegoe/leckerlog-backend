@@ -30,8 +30,12 @@ app.get('/', (_, res) => {
 
 // get alle restaurants and food for user
 app.get('/restaurants', async (req, res) => {
-    const restaurants = await pool.query('SELECT * from restaurants');
-    res.json(restaurants.rows);
+    try {
+        const restaurants = await pool.query('SELECT * FROM restaurants');
+        res.json(restaurants.rows);
+    } catch(error) {
+        console.log(error)
+    }
 })
 
 // get single restaurant and foods for user
