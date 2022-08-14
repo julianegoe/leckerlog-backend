@@ -29,10 +29,10 @@ app.get('/', (_, res) => {
 // create a restaurant and food
 
 // get alle restaurants and food for user
-/* app.get('/restaurants', async (req, res) => {
+app.get('/restaurants', async (req, res) => {
     const restaurants = await pool.query('SELECT * from restaurants');
     res.json(restaurants.rows);
-}) */
+})
 
 // get single restaurant and foods for user
 
