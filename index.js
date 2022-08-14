@@ -63,12 +63,26 @@ app.post('/food', async (req, res) => {
     }
 })
 
-// get alle restaurants and food for user
+// get all restaurants and food for user
 app.get('/restaurants', async (req, res) => {
     try {
         const client = await pool.connect();
         const restaurants = await client.query('SELECT * from restaurants');
         res.json(restaurants.rows);
+    } catch(error) {
+        console.log(error)
+        res.status(500).send({
+            message: error.message || "Some error occurred.",
+          });
+    }
+})
+
+// get all food for user
+app.get('/food', async (req, res) => {
+    try {
+        const client = await pool.connect();
+        const foodOrdered = await client.query('SELECT * from food_ordered');
+        res.json(foodOrdered.rows);
     } catch(error) {
         console.log(error)
         res.status(500).send({
