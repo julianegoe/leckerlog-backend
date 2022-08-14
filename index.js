@@ -3,13 +3,11 @@ const express = require('express');
 const app = express();
 const cors = require('cors');
 const pool = require('./database');
-const { Client } = require('pg');
+/* const { Client } = require('pg');
 
 const client = new Client({
     connectionString: process.env.DATABASE_URL,
-    ssl: {
-        rejectUnauthorized: false
-      }
+    ssl: true,
   });
 
 client.connect();
@@ -20,7 +18,7 @@ client.query('SELECT table_schema,table_name FROM information_schema.tables;', (
     console.log(JSON.stringify(row));
   }
   client.end();
-});
+}); */
 
 // middleware
 app.use(cors());
