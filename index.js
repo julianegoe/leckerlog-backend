@@ -17,7 +17,6 @@ app.use(express.json());
 app.use(logger('dev'));
 
 const checkAuth = (req, res, next) => {
-    console.log(req.query.id)
     if (req.headers.authtoken) {
         admin.auth().verifyIdToken(req.headers.authtoken)
             .then(() => {
@@ -58,14 +57,15 @@ app.get('/cuisines', async (req, res) => {
 })
 
 // create a restaurant record
-app.post('/restaurants', async (req, res) => {
+app.post('/restaurants/:id', async (req, res) => {
     try {
         const client = await pool.connect();
         const { name, cuisine, cuisine_id } = req.body;
+        const { id } = req.params;
         const date_created = new Date().toISOString().split('T')[0];
         const date_updated = new Date().toISOString().split('T')[0];
-        const restaurants = await client.query("INSERT INTO restaurants(name, cuisine, cuisine_Id, date_created, date_updated) VALUES($1, $2, $3, $4, $5) RETURNING *",
-            [name, cuisine, cuisine_id, date_created, date_updated]);
+        const restaurants = await client.query("INSERT INTO restaurants(name, cuisine, cuisine_Id, date_created, date_updated, user_id) VALUES($1, $2, $3, $4, $5, $6) RETURNING *",
+            [name, cuisine, cuisine_id, date_created, date_updated, id]);
         res.json(restaurants.rows);
     } catch (error) {
         console.log(error)
@@ -76,14 +76,15 @@ app.post('/restaurants', async (req, res) => {
 })
 
 // create a food record
-app.post('/food', async (req, res) => {
+app.post('/food/:id', async (req, res) => {
     try {
         const client = await pool.connect();
         const { name, cuisine_id, restaurant_id, comment, rating, ordered_at, image_path } = req.body;
+        const { id } = req.params;
         const date_created = new Date().toISOString().split('T')[0];
         const date_updated = new Date().toISOString().split('T')[0];
-        const restaurants = await client.query("INSERT INTO food_ordered(name, cuisine_Id, restaurant_id, comment, rating, ordered_at, image_path, date_created, date_updated) VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9) RETURNING *",
-            [name, cuisine_id, restaurant_id, comment, rating, ordered_at, image_path, date_created, date_updated]);
+        const restaurants = await client.query("INSERT INTO food_ordered(name, user_id, cuisine_Id, restaurant_id, comment, rating, ordered_at, image_path, date_created, date_updated) VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9, $10) RETURNING *",
+            [name, id, cuisine_id, restaurant_id, comment, rating, ordered_at, image_path, date_created, date_updated]);
         res.json(restaurants.rows);
     } catch (error) {
         console.log(error)
@@ -94,10 +95,11 @@ app.post('/food', async (req, res) => {
 })
 
 // get all restaurants and food for user
-app.get('/restaurants', async (req, res) => {
+app.get('/restaurants/:id', async (req, res) => {
     try {
         const client = await pool.connect();
-        const restaurants = await client.query('SELECT * from restaurants');
+        const { id } = req.params;
+        const restaurants = await client.query('SELECT * from restaurants where user_id = $1', [id]);
         res.json(restaurants.rows);
     } catch (error) {
         console.log(error)
@@ -108,26 +110,12 @@ app.get('/restaurants', async (req, res) => {
 })
 
 // get all food for user
-app.get('/food', async (req, res) => {
-    try {
-        const client = await pool.connect();
-        const foodOrdered = await client.query('SELECT * from food_ordered');
-        res.json(foodOrdered.rows);
-    } catch (error) {
-        console.log(error)
-        res.status(500).send({
-            message: error.message || "Some error occurred.",
-        });
-    }
-})
-
-// get single restaurant and foods for user
-app.get('/restaurants/:id', async (req, res) => {
+app.get('/food/:id', async (req, res) => {
     try {
         const client = await pool.connect();
         const { id } = req.params;
-        const restaurants = await client.query('SELECT * from restaurants WHERE restaurant_id = $1', [id]);
-        res.json(restaurants.rows);
+        const foodOrdered = await client.query('SELECT * from food_ordered where user_id = $1', [id]);
+        res.json(foodOrdered.rows);
     } catch (error) {
         console.log(error)
         res.status(500).send({
