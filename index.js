@@ -65,7 +65,7 @@ app.post('/restaurants/:id', async (req, res) => {
         const date_updated = new Date().toISOString().split('T')[0];
         const existingRestaurant = await pool.query('SELECT * from restaurant where name like %$1% and user_id = $2', [name, id])
         if (!existingRestaurant) {
-            const addedRestaurant = await pool.query("INSERT INTO restaurants(name, cuisine, cuisine_Id, date_created, date_updated, user_id) VALUES($1, $2, $3, $4, $5, $6) RETURNING *", [name, cuisine, cuisine_id, date_created, date_updated, id]);
+            const addedRestaurant = await pool.query("INSERT INTO restaurants(name, cuisine, cuisine_id, date_created, date_updated, user_id) VALUES($1, $2, $3, $4, $5, $6) RETURNING *", [name, cuisine, cuisine_id, date_created, date_updated, id]);
             res.json(addedRestaurant.rows);
         }
     } catch (error) {
@@ -84,7 +84,7 @@ app.post('/food/:id', async (req, res) => {
         const cuisine_id = await pool.query('SELECT id from cuisines where name = $1', [cuisine]);
         const date_created = new Date().toISOString().split('T')[0];
         const date_updated = new Date().toISOString().split('T')[0];
-        const restaurants = await pool.query("INSERT INTO food_ordered(name, user_id, cuisine_Id, restaurant_id, comment, rating, ordered_at, image_path, date_created, date_updated) VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9, $10) RETURNING *",
+        const restaurants = await pool.query("INSERT INTO food_ordered(name, user_id, cuisine_id, restaurant_id, comment, rating, ordered_at, image_path, date_created, date_updated) VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9, $10) RETURNING *",
             [name, id, cuisine_id, restaurant_id, comment, rating, ordered_at, image_path, date_created, date_updated]);
         res.json(restaurants.rows);
     } catch (error) {
