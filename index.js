@@ -63,7 +63,7 @@ app.post('/restaurants/:id', async (req, res) => {
         const cuisine_Id = await pool.query('SELECT cuisine_id from cuisines where name = $1', [cuisine]);
         const date_created = new Date().toISOString().split('T')[0];
         const date_updated = new Date().toISOString().split('T')[0];
-        const existingRestaurant = await pool.query('SELECT * from restaurants where name like %$1% and user_id = $2', [name, id])
+        const existingRestaurant = await pool.query('SELECT * from restaurants where name = $1 and user_id = $2', [name, id])
         if (!existingRestaurant) {
             const addedRestaurant = await pool.query("INSERT INTO restaurants(name, cuisine, cuisine_Id, date_created, date_updated, user_id) VALUES($1, $2, $3, $4, $5, $6) RETURNING *", [name, cuisine, cuisine_Id, date_created, date_updated, id]);
             res.json(addedRestaurant.rows);
