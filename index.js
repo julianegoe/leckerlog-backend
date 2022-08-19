@@ -5,10 +5,9 @@ const cors = require('cors');
 const pool = require('./database');
 var logger = require('morgan');
 const admin = require('firebase-admin');
-var serviceAccount = require("./config/fbServiceAccountKey.json");
 
 admin.initializeApp({
-    credential: admin.credential.cert(serviceAccount),
+    credential: admin.credential.cert(JSON.parse(process.env.FB_SERVICE_ACCOUNT_KEY)),
     databaseURL: "https://leckerlog-default-rtdb.europe-west1.firebasedatabase.app"
 });
 
@@ -39,7 +38,7 @@ app.use('/food', checkAuth);
 // routes
 app.get('/', (_, res) => {
     res.json({
-        message: 'hello world',
+        message: 'hallo welt',
     })
 })
 
