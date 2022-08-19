@@ -7,4 +7,7 @@ const pool = new Pool({
 
 pool.on('connect', () => console.log('connected to db'));
 
-module.exports = pool;
+const client = async () => await pool.connect()();
+
+
+module.exports = client;

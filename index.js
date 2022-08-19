@@ -2,11 +2,9 @@ require('dotenv').config();
 const express = require('express');
 const app = express();
 const cors = require('cors');
-const pool = require('./database');
+const client = require('./database');
 var logger = require('morgan');
 const admin = require('firebase-admin');
-
-const client = await pool.connect();
 
 admin.initializeApp({
     credential: admin.credential.cert(JSON.parse(process.env.FB_SERVICE_ACCOUNT_KEY)),
