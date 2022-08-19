@@ -2,7 +2,7 @@ require('dotenv').config();
 const express = require('express');
 const app = express();
 const cors = require('cors');
-const client = require('./database');
+const pool = require('./database');
 var logger = require('morgan');
 const admin = require('firebase-admin');
 
@@ -45,8 +45,9 @@ app.get('/', (_, res) => {
 // get all cuisines
 app.get('/cuisines', async (req, res) => {
     try {
-        const restaurants = await client.query('SELECT * from cuisines');
+        const restaurants = await pool.query('SELECT * from cuisines');
         res.json(restaurants.rows);
+        pool.end();
     } catch (error) {
         console.log(error)
         res.status(500).send({
@@ -62,9 +63,10 @@ app.post('/restaurants/:id', async (req, res) => {
         const { id } = req.params;
         const date_created = new Date().toISOString().split('T')[0];
         const date_updated = new Date().toISOString().split('T')[0];
-        const restaurants = await client.query("INSERT INTO restaurants(name, cuisine, cuisine_Id, date_created, date_updated, user_id) VALUES($1, $2, $3, $4, $5, $6) RETURNING *",
+        const restaurants = await pool.query("INSERT INTO restaurants(name, cuisine, cuisine_Id, date_created, date_updated, user_id) VALUES($1, $2, $3, $4, $5, $6) RETURNING *",
             [name, cuisine, cuisine_id, date_created, date_updated, id]);
         res.json(restaurants.rows);
+        pool.end();
     } catch (error) {
         console.log(error)
         res.status(500).send({
@@ -80,9 +82,10 @@ app.post('/food/:id', async (req, res) => {
         const { id } = req.params;
         const date_created = new Date().toISOString().split('T')[0];
         const date_updated = new Date().toISOString().split('T')[0];
-        const restaurants = await client.query("INSERT INTO food_ordered(name, user_id, cuisine_Id, restaurant_id, comment, rating, ordered_at, image_path, date_created, date_updated) VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9, $10) RETURNING *",
+        const restaurants = await pool.query("INSERT INTO food_ordered(name, user_id, cuisine_Id, restaurant_id, comment, rating, ordered_at, image_path, date_created, date_updated) VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9, $10) RETURNING *",
             [name, id, cuisine_id, restaurant_id, comment, rating, ordered_at, image_path, date_created, date_updated]);
         res.json(restaurants.rows);
+        pool.end();
     } catch (error) {
         console.log(error)
         res.status(500).send({
@@ -95,8 +98,9 @@ app.post('/food/:id', async (req, res) => {
 app.get('/restaurants/:id', async (req, res) => {
     try {
         const { id } = req.params;
-        const restaurants = await client.query('SELECT * from restaurants where user_id = $1', [id]);
+        const restaurants = await pool.query('SELECT * from restaurants where user_id = $1', [id]);
         res.json(restaurants.rows);
+        pool.end();
     } catch (error) {
         console.log(error)
         res.status(500).send({
@@ -109,8 +113,9 @@ app.get('/restaurants/:id', async (req, res) => {
 app.get('/food/:id', async (req, res) => {
     try {
         const { id } = req.params;
-        const foodOrdered = await client.query('SELECT * from food_ordered where user_id = $1', [id]);
+        const foodOrdered = await pool.query('SELECT * from food_ordered where user_id = $1', [id]);
         res.json(foodOrdered.rows);
+        pool.end();
     } catch (error) {
         console.log(error)
         res.status(500).send({
@@ -123,8 +128,9 @@ app.get('/food/:id', async (req, res) => {
 app.delete('/food/:id', async (req, res) => {
     try {
         const { id } = req.params;
-        const restaurants = await client.query('DELETE from food_ordered WHERE food_id = $1', [id]);
+        const restaurants = await pool.query('DELETE from food_ordered WHERE food_id = $1', [id]);
         res.send('Food was successfully deleted');
+        pool.end();
     } catch (error) {
         console.log(error)
         res.status(500).send({
