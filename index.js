@@ -76,12 +76,12 @@ app.post('/restaurants/:id', async (req, res) => {
 // create a food record
 app.post('/food/:id', async (req, res) => {
     try {
-        const { name, cuisine_id, restaurant_id, comment, rating, ordered_at, image_path } = req.body;
+        const { name, restaurant_id, comment, rating, ordered_at, image_path } = req.body;
         const { id } = req.params;
         const date_created = new Date().toISOString().split('T')[0];
         const date_updated = new Date().toISOString().split('T')[0];
-        const foodOrdered = await pool.query("INSERT INTO food_ordered(name, user_id, cuisine_id, restaurant_id, comment, rating, ordered_at, image_path, date_created, date_updated) VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9, $10) RETURNING *",
-            [name, id, cuisine_id, restaurant_id, comment, rating, ordered_at, image_path, date_created, date_updated]);
+        const foodOrdered = await pool.query("INSERT INTO food_ordered(name, user_id, restaurant_id, comment, rating, ordered_at, image_path, date_created, date_updated) VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9, $10) RETURNING *",
+            [name, id, restaurant_id, comment, rating, ordered_at, image_path, date_created, date_updated]);
         res.json(foodOrdered.rows);
     } catch (error) {
         console.log(error)
