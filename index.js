@@ -30,7 +30,6 @@ const checkAuth = (req, res, next) => {
     }
 };
 
-app.use('/', checkAuth);
 app.use('/restaurants', checkAuth);
 app.use('/food', checkAuth);
 
