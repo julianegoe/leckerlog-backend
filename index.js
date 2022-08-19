@@ -54,7 +54,7 @@ app.get('/cuisines', async (req, res) => {
 })
 
 // add a cuisine
-app.get('/cuisines/:name', async (req, res) => {
+app.post('/cuisines/:name', async (req, res) => {
     const { name } = req.params;
     try {
         const addedCuisine = await pool.query("INSERT INTO cuisines(name) VALUES($1) RETURNING *", [name]);
