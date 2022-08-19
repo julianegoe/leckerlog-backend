@@ -58,13 +58,16 @@ app.get('/cuisines', async (req, res) => {
 // create a restaurant record
 app.post('/restaurants/:id', async (req, res) => {
     try {
-        const { name, cuisine, cuisine_id } = req.body;
+        const { name, cuisine } = req.body;
         const { id } = req.params;
+        const cuisine_id = await pool.query('SELECT id from cuisines where name = $1', [cuisine])
         const date_created = new Date().toISOString().split('T')[0];
         const date_updated = new Date().toISOString().split('T')[0];
-        const restaurants = await pool.query("INSERT INTO restaurants(name, cuisine, cuisine_Id, date_created, date_updated, user_id) VALUES($1, $2, $3, $4, $5, $6) RETURNING *",
-            [name, cuisine, cuisine_id, date_created, date_updated, id]);
-        res.json(restaurants.rows);
+        const existingRestaurant = await pool.query('SELECT * from restaurant where name like %$1% and user_id = $2', [name, id])
+        if (!existingRestaurant) {
+            const addedRestaurant = await pool.query("INSERT INTO restaurants(name, cuisine, cuisine_Id, date_created, date_updated, user_id) VALUES($1, $2, $3, $4, $5, $6) RETURNING *", [name, cuisine, cuisine_id, date_created, date_updated, id]);
+            res.json(addedRestaurant.rows);
+        }
     } catch (error) {
         console.log(error)
         res.status(500).send({
