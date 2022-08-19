@@ -17,9 +17,9 @@ app.use(express.json());
 app.use(logger('dev'));
 
 const checkAuth = (req, res, next) => {
+    console.log(req.params.id)
     if (req.headers.authtoken) {
-        admin.auth().verifyIdToken(req.headers.authtoken);
-        console.log(admin.auth().getUser(req.params.id))
+        admin.auth().verifyIdToken(req.headers.authtoken)
             .then(() => {
                 next();
             }).catch((error) => {
