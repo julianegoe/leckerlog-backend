@@ -6,6 +6,8 @@ const pool = require('./database');
 var logger = require('morgan');
 const admin = require('firebase-admin');
 
+const client = await pool.connect();
+
 admin.initializeApp({
     credential: admin.credential.cert(JSON.parse(process.env.FB_SERVICE_ACCOUNT_KEY)),
     databaseURL: "https://leckerlog-default-rtdb.europe-west1.firebasedatabase.app"
@@ -45,7 +47,6 @@ app.get('/', (_, res) => {
 // get all cuisines
 app.get('/cuisines', async (req, res) => {
     try {
-        const client = await pool.connect();
         const restaurants = await client.query('SELECT * from cuisines');
         res.json(restaurants.rows);
     } catch (error) {
@@ -59,7 +60,6 @@ app.get('/cuisines', async (req, res) => {
 // create a restaurant record
 app.post('/restaurants/:id', async (req, res) => {
     try {
-        const client = await pool.connect();
         const { name, cuisine, cuisine_id } = req.body;
         const { id } = req.params;
         const date_created = new Date().toISOString().split('T')[0];
@@ -78,7 +78,6 @@ app.post('/restaurants/:id', async (req, res) => {
 // create a food record
 app.post('/food/:id', async (req, res) => {
     try {
-        const client = await pool.connect();
         const { name, cuisine_id, restaurant_id, comment, rating, ordered_at, image_path } = req.body;
         const { id } = req.params;
         const date_created = new Date().toISOString().split('T')[0];
@@ -97,7 +96,6 @@ app.post('/food/:id', async (req, res) => {
 // get all restaurants and food for user
 app.get('/restaurants/:id', async (req, res) => {
     try {
-        const client = await pool.connect();
         const { id } = req.params;
         const restaurants = await client.query('SELECT * from restaurants where user_id = $1', [id]);
         res.json(restaurants.rows);
@@ -112,7 +110,6 @@ app.get('/restaurants/:id', async (req, res) => {
 // get all food for user
 app.get('/food/:id', async (req, res) => {
     try {
-        const client = await pool.connect();
         const { id } = req.params;
         const foodOrdered = await client.query('SELECT * from food_ordered where user_id = $1', [id]);
         res.json(foodOrdered.rows);
@@ -127,7 +124,6 @@ app.get('/food/:id', async (req, res) => {
 // delete food for restaurant for user
 app.delete('/food/:id', async (req, res) => {
     try {
-        const client = await pool.connect();
         const { id } = req.params;
         const restaurants = await client.query('DELETE from food_ordered WHERE food_id = $1', [id]);
         res.send('Food was successfully deleted');
