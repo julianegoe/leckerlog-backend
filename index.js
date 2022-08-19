@@ -38,7 +38,7 @@ app.use('/food', checkAuth);
 // routes
 app.get('/', (_, res) => {
     res.json({
-        message: 'hello world',
+        message: 'hallo welt',
     })
 })
 
