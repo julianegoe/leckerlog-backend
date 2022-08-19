@@ -60,7 +60,7 @@ app.post('/restaurants/:id', async (req, res) => {
     try {
         const { name, cuisine } = req.body;
         const { id } = req.params;
-        const cuisine_id = await pool.query('SELECT id from cuisines where name = $1', [cuisine])
+        const cuisine_id = await pool.query('SELECT id from cuisines where name = $1', [cuisine]);
         const date_created = new Date().toISOString().split('T')[0];
         const date_updated = new Date().toISOString().split('T')[0];
         const existingRestaurant = await pool.query('SELECT * from restaurant where name like %$1% and user_id = $2', [name, id])
@@ -79,8 +79,9 @@ app.post('/restaurants/:id', async (req, res) => {
 // create a food record
 app.post('/food/:id', async (req, res) => {
     try {
-        const { name, cuisine_id, restaurant_id, comment, rating, ordered_at, image_path } = req.body;
+        const { name, cuisine, restaurant_id, comment, rating, ordered_at, image_path } = req.body;
         const { id } = req.params;
+        const cuisine_id = await pool.query('SELECT id from cuisines where name = $1', [cuisine]);
         const date_created = new Date().toISOString().split('T')[0];
         const date_updated = new Date().toISOString().split('T')[0];
         const restaurants = await pool.query("INSERT INTO food_ordered(name, user_id, cuisine_Id, restaurant_id, comment, rating, ordered_at, image_path, date_created, date_updated) VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9, $10) RETURNING *",
