@@ -72,6 +72,7 @@ app.post('/restaurants/:id', async (req, res) => {
     try {
         const { name, cuisine, cuisine_id } = req.body;
         const { id } = req.params;
+        console.log(req.body);
         const date_created = new Date().toISOString().split('T')[0];
         const date_updated = new Date().toISOString().split('T')[0];
         const existingRestaurant = await pool.query('SELECT * from restaurants where name = $1 and user_id = $2', [name, id])
