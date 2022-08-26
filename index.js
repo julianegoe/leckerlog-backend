@@ -72,7 +72,6 @@ app.post('/restaurants/:id', async (req, res) => {
     try {
         const { restaurantName, foodName, cuisine, cuisine_id, comment, rating, ordered_at, image_path } = req.body;
         const { id } = req.params;
-        console.log(req.body);
         const date_created = new Date().toISOString().split('T')[0];
         const date_updated = new Date().toISOString().split('T')[0];
         const existingRestaurant = await pool.query('SELECT * from restaurants where name = $1 and user_id = $2', [name, id])
@@ -137,10 +136,10 @@ app.get('/food/:id', async (req, res) => {
 })
 
 // delete food for restaurant for user
-app.delete('/food/:id', async (req, res) => {
+app.delete('/food/:id/:foodId', async (req, res) => {
     try {
-        const { id } = req.params;
-        const restaurants = await pool.query('DELETE from food_ordered WHERE food_id = $1', [id]);
+        const { id, foodId } = req.params;
+        const restaurants = await pool.query('DELETE from food_ordered WHERE user_id = $1 food_id = $2', [id, foodId]);
         res.send('Food was successfully deleted');
     } catch (error) {
         console.log(error)
