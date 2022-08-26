@@ -78,8 +78,12 @@ app.post('/restaurants/:id', async (req, res) => {
         if (existingRestaurant.rows.length === 0) {
             const addedRestaurant = await pool.query("INSERT INTO restaurants(name, cuisine, cuisine_id, date_created, date_updated, user_id) VALUES($1, $2, $3, $4, $5, $6) RETURNING *", [restaurantName, cuisine, cuisine_id, date_created, date_updated, id]);
             const foodOrdered = await pool.query("INSERT INTO food_ordered(name, user_id, cuisine_id, restaurant_id, comment, rating, ordered_at, image_path, date_created, date_updated) VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9, $10) RETURNING *",
-            [foodName, id, cuisine_id, existingRestaurant.rows[0].restaurant_id, comment, rating, ordered_at, image_path, date_created, date_updated]);
+            [foodName, id, cuisine_id, addedRestaurant.rows[0].restaurant_id, comment, rating, ordered_at, image_path, date_created, date_updated]);
         res.json([foodOrdered.rows, addedRestaurant.rows]);
+        } else {
+            const foodOrdered = await pool.query("INSERT INTO food_ordered(name, user_id, cuisine_id, restaurant_id, comment, rating, ordered_at, image_path, date_created, date_updated) VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9, $10) RETURNING *",
+            [foodName, id, cuisine_id, existingRestaurant.rows[0].restaurant_id, comment, rating, ordered_at, image_path, date_created, date_updated]);
+            res.json([foodOrdered.rows]);
         }
     } catch (error) {
         console.log(error)
