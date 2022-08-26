@@ -74,7 +74,7 @@ app.post('/restaurants/:id', async (req, res) => {
         const { id } = req.params;
         const date_created = new Date().toISOString().split('T')[0];
         const date_updated = new Date().toISOString().split('T')[0];
-        const existingRestaurant = await pool.query('SELECT * from restaurants where name = $1 and user_id = $2', [name, id])
+        const existingRestaurant = await pool.query('SELECT * from restaurants where name = $1 and user_id = $2', [restaurantName, id])
         if (existingRestaurant.rows.length === 0) {
             const addedRestaurant = await pool.query("INSERT INTO restaurants(name, cuisine, cuisine_id, date_created, date_updated, user_id) VALUES($1, $2, $3, $4, $5, $6) RETURNING *", [restaurantName, cuisine, cuisine_id, date_created, date_updated, id]);
             const foodOrdered = await pool.query("INSERT INTO food_ordered(name, user_id, cuisine_id, restaurant_id, comment, rating, ordered_at, image_path, date_created, date_updated) VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9, $10) RETURNING *",
@@ -141,7 +141,7 @@ app.delete('/food/:id/:foodId', async (req, res) => {
         const { id, foodId } = req.params;
         const restaurants = await pool.query('DELETE from food_ordered WHERE user_id = $1 food_id = $2', [id, foodId]);
         res.send('Food was successfully deleted');
-    } catch (error) {
+    } catch (error) {r
         console.log(error)
         res.status(500).send({
             message: error.message || "Some error occurred.",
