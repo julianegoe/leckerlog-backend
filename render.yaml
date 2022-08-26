@@ -8,19 +8,6 @@ services:
     dockerfilePath: Dockerfile.render
     plan: free # optional; defaults to starter
     numInstances: 1
-    envVars:
-      - key: DATABASE # Imported from Heroku app
-        value: d6jme4p9lpqb7v
-      - key: HOST # Imported from Heroku app
-        value: ec2-52-49-120-150.eu-west-1.compute.amazonaws.com
-      - key: PGSSLMODE # Imported from Heroku app
-        value: no-verify
-      - key: USER # Imported from Heroku app
-        value: ljqdbwmmaehnif
-      - key: DATABASE_URL # Render PostgreSQL database
-        fromDatabase:
-          name: postgresql-adjacent-88966
-          property: connectionString
 
 databases: # Render PostgreSQL database
   - name: postgresql-adjacent-88966
