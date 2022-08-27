@@ -96,32 +96,22 @@ app.post('/restaurants/:id', async (req, res) => {
         const { id } = req.params;
         const date_created = new Date().toISOString().split('T')[0];
         const date_updated = new Date().toISOString().split('T')[0];
-        const updatedRestaurant = await pool.query('UPDATE restaurants SET cuisine = $1, cuisine_id = $2 where user_id = $3 AND name = $4', 
+        const updatedRestaurant = await pool.query(`
+        INSERT INTO restaurants (name, cuisine, cuisine_Id, date_created, date_updated, user_id)
+        VALUES ($1, $2, $3, $4, $5, $6)
+        ON CONFLICT (name, user_id) DO UPDATE
+        SET cuisine = $2,
+        cuisine_Id = $3,
+        date_updated =  $5 RETURNING *;`, 
         [
-            cuisine, cuisine_id, restaurantName, id
+            restaurantName, cuisine, cuisine_id, date_created, date_updated, id,
         ])
-        const foodOrdered = await pool.query("INSERT INTO food_ordered(name, user_id, cuisine_id, restaurant_id, comment, rating, ordered_at, image_path, date_created, date_updated) VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9, $10) RETURNING *",
-        [foodName, id, cuisine_id, updatedRestaurant.rows[0].restaurant_id, comment, rating, ordered_at, image_path, date_created, date_updated]);
-        res.json([updatedRestaurant.rows, foodOrdered.rows]);
-            
-    } catch (error) {
-        console.log(error)
-        res.status(500).send({
-            message: error.message || "Some error occurred.",
-        });
-    }
-})
-
-// create a food record
-app.post('/food/:id', async (req, res) => {
-    try {
-        const { name, cuisine_id, restaurant_id, comment, rating, ordered_at, image_path } = req.body;
-        const { id } = req.params;
-        const date_created = new Date().toISOString().split('T')[0];
-        const date_updated = new Date().toISOString().split('T')[0];
-        const foodOrdered = await pool.query("INSERT INTO food_ordered(name, user_id, cuisine_id, restaurant_id, comment, rating, ordered_at, image_path, date_created, date_updated) VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9, $10) RETURNING *",
-            [name, id, cuisine_id, restaurant_id, comment, rating, ordered_at, image_path, date_created, date_updated]);
-        res.json(foodOrdered.rows);
+        console.log(updatedRestaurant.rows)
+        if (updatedRestaurant.rows[0].restaurant_id) {
+            const foodOrdered = await pool.query("INSERT INTO food_ordered(name, user_id, cuisine_id, restaurant_id, comment, rating, ordered_at, image_path, date_created, date_updated) VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9, $10) RETURNING *",
+            [foodName, id, cuisine_id, updatedRestaurant.rows[0].restaurant_id, comment, rating, ordered_at, image_path, date_created, date_updated]);
+            res.json([updatedRestaurant.rows, foodOrdered.rows]);
+        }
     } catch (error) {
         console.log(error)
         res.status(500).send({
@@ -135,10 +125,11 @@ app.get('/leckerlog/:id', async (req, res) => {
     try {
         const { id } = req.params;
         const restaurants = await pool.query(`
-        SELECT *
+        SELECT restaurants.*, subVirt.food_ordered
         FROM restaurants
-        FULL OUTER JOIN food_ordered ON restaurants.cuisine_Id=food_ordered.cuisine_Id
-        WHERE food_ordered.user_id = $1 and restaurants.user_id = $1;`, [id]);
+        LEFT JOIN (SELECT restaurant_id, json_agg(row_to_json(food_ordered)) AS food_ordered FROM  food_ordered WHERE user_id = $1
+        GROUP  BY 1
+        ) subVirt ON subVirt.restaurant_id = restaurants.restaurant_id;`, [id]);
         res.json(restaurants.rows);
     } catch (error) {
         console.log(error)
@@ -166,9 +157,9 @@ app.get('/food/:id', async (req, res) => {
 app.delete('/food/:id/:foodId', async (req, res) => {
     try {
         const { id, foodId } = req.params;
-        const restaurants = await pool.query('DELETE from food_ordered WHERE user_id = $1 food_id = $2', [id, foodId]);
-        res.send('Food was successfully deleted');
-    } catch (error) {r
+        const restaurants = await pool.query('DELETE from food_ordered WHERE user_id = $1 and food_id = $2 RETURNING *', [id, foodId]);
+        res.send(restaurants.rows);
+    } catch (error) {
         console.log(error)
         res.status(500).send({
             message: error.message || "Some error occurred.",
