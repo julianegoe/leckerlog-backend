@@ -40,11 +40,16 @@ app.get('/', (_, res) => {
     })
 })
 
-// get all cuisines
-app.get('/cuisines', async (req, res) => {
+// get all cuisines for user
+app.get('/cuisines/:id', async (req, res) => {
+    const { id } = req.params;
     try {
-        const restaurants = await pool.query('SELECT * from cuisines');
-        res.json(restaurants.rows);
+        const cuisines = await pool.query(sql`
+        SELECT * from cuisines where cuisine_Id in (SELECT cuisine_id
+        FROM restaurants
+        WHERE user_id = $1);
+        `, [id]);
+        res.json(cuisines.rows);
     } catch (error) {
         console.log(error)
         res.status(500).send({
