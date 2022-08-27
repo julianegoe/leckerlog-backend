@@ -74,17 +74,14 @@ app.post('/restaurants/:id', async (req, res) => {
         const { id } = req.params;
         const date_created = new Date().toISOString().split('T')[0];
         const date_updated = new Date().toISOString().split('T')[0];
-        const existingRestaurant = await pool.query('SELECT * from restaurants where name = $1 and user_id = $2', [restaurantName, id])
-        if (existingRestaurant.rows.length === 0) {
-            const addedRestaurant = await pool.query("INSERT INTO restaurants(name, cuisine, cuisine_id, date_created, date_updated, user_id) VALUES($1, $2, $3, $4, $5, $6) RETURNING *", [restaurantName, cuisine, cuisine_id, date_created, date_updated, id]);
-            const foodOrdered = await pool.query("INSERT INTO food_ordered(name, user_id, cuisine_id, restaurant_id, comment, rating, ordered_at, image_path, date_created, date_updated) VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9, $10) RETURNING *",
-            [foodName, id, cuisine_id, addedRestaurant.rows[0].restaurant_id, comment, rating, ordered_at, image_path, date_created, date_updated]);
-        res.json([foodOrdered.rows, addedRestaurant.rows]);
-        } else {
-            const foodOrdered = await pool.query("INSERT INTO food_ordered(name, user_id, cuisine_id, restaurant_id, comment, rating, ordered_at, image_path, date_created, date_updated) VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9, $10) RETURNING *",
-            [foodName, id, cuisine_id, existingRestaurant.rows[0].restaurant_id, comment, rating, ordered_at, image_path, date_created, date_updated]);
-            res.json([foodOrdered.rows]);
-        }
+        const updatedRestaurant = await pool.query('UPDATE restaurants SET cuisine = $1, cuisine_id = $2 where user_id = $3 AND name = $4', 
+        [
+            cuisine, cuisine_id, restaurantName, id
+        ])
+        const foodOrdered = await pool.query("INSERT INTO food_ordered(name, user_id, cuisine_id, restaurant_id, comment, rating, ordered_at, image_path, date_created, date_updated) VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9, $10) RETURNING *",
+        [foodName, id, cuisine_id, updatedRestaurant.rows[0].restaurant_id, comment, rating, ordered_at, image_path, date_created, date_updated]);
+        res.json([updatedRestaurant.rows, foodOrdered.rows]);
+            
     } catch (error) {
         console.log(error)
         res.status(500).send({
@@ -112,10 +109,14 @@ app.post('/food/:id', async (req, res) => {
 })
 
 // get all restaurants and food for user
-app.get('/restaurants/:id', async (req, res) => {
+app.get('/leckerlog/:id', async (req, res) => {
     try {
         const { id } = req.params;
-        const restaurants = await pool.query('SELECT * from restaurants where user_id = $1', [id]);
+        const restaurants = await pool.query(sql`
+        SELECT *
+        FROM restaurants
+        FULL OUTER JOIN food_ordered ON restaurants.cuisine_Id=food_ordered.cuisine_Id
+        WHERE food_ordered.user_id = $1 and restaurants.user_id = $1;`, [id]);
         res.json(restaurants.rows);
     } catch (error) {
         console.log(error)
