@@ -32,7 +32,7 @@ const checkAuth = (req, res, next) => {
 
 app.use('/leckerlog', checkAuth);
 app.use('/restaurants', checkAuth);
-app.use('/cuisines', checkAuth);
+app.use('/cuisines/:id', checkAuth);
 app.use('/food', checkAuth);
 
 // routes
@@ -51,6 +51,21 @@ app.get('/cuisines/:id', async (req, res) => {
         FROM restaurants
         WHERE user_id = $1);
         `, [id]);
+        res.json(cuisines.rows);
+    } catch (error) {
+        console.log(error)
+        res.status(500).send({
+            message: error.message || "Some error occurred.",
+        });
+    }
+})
+
+// get all cuisines
+app.get('/cuisines', async (req, res) => {
+    try {
+        const cuisines = await pool.query(`
+        SELECT * from cuisines
+        `);
         res.json(cuisines.rows);
     } catch (error) {
         console.log(error)
