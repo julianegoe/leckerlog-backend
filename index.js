@@ -119,7 +119,7 @@ app.post('/food/:id', async (req, res) => {
 app.get('/leckerlog/:id', async (req, res) => {
     try {
         const { id } = req.params;
-        const restaurants = await pool.query(sql`
+        const restaurants = await pool.query(`
         SELECT *
         FROM restaurants
         FULL OUTER JOIN food_ordered ON restaurants.cuisine_Id=food_ordered.cuisine_Id
