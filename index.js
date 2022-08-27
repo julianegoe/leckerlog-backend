@@ -30,7 +30,9 @@ const checkAuth = (req, res, next) => {
     }
 };
 
+app.use('/leckerlog', checkAuth);
 app.use('/restaurants', checkAuth);
+app.use('/cuisines', checkAuth);
 app.use('/food', checkAuth);
 
 // routes
