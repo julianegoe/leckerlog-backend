@@ -46,7 +46,7 @@ app.get('/', (_, res) => {
 app.get('/cuisines/:id', async (req, res) => {
     const { id } = req.params;
     try {
-        const cuisines = await pool.query(sql`
+        const cuisines = await pool.query(`
         SELECT * from cuisines where cuisine_Id in (SELECT cuisine_id
         FROM restaurants
         WHERE user_id = $1);
