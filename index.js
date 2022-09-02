@@ -8,7 +8,7 @@ const admin = require('firebase-admin');
 const morgan = require('morgan');
 
 const corsOptions = {
-    origin: ['http://localhost:5173', 'https://own-backend--fantastic-fairy-abcd7e.netlify.app'],
+    origin: ['http://localhost:5173', 'https://main--lecker-log.netlify.app/'],
   }
 
 admin.initializeApp({
