@@ -8,12 +8,13 @@ const admin = require('firebase-admin');
 const morgan = require('morgan');
 
 const corsOptions = {
-    origin: ['http://localhost:3000', 'https://own-backend--fantastic-fairy-abcd7e.netlify.app'],
+    origin: ['http://localhost:5173', 'https://own-backend--fantastic-fairy-abcd7e.netlify.app'],
   }
 
 admin.initializeApp({
     credential: admin.credential.cert(JSON.parse(process.env.FB_SERVICE_ACCOUNT_KEY)),
     databaseURL: process.env.FB_DATABASE_URL,
+    storageBucket: process.env.FB_STORAGE_NAME,
 });
 
 // middleware

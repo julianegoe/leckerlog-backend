@@ -82,3 +82,42 @@ VALUES ('Osmans Töchter', 'Türkisch', 1, DATE '2022-08-14', DATE '2022-08-14')
 SELECT * from cuisines;
 SELECT * from restaurants;
 SELECT * from food_ordered;
+
+SELECT *
+FROM restaurants
+FULL OUTER JOIN food_ordered ON restaurants.cuisine_Id=food_ordered.cuisine_Id
+WHERE food_ordered.user_id = $1 and restaurants.user_id = $1;
+
+SELECT * from cuisines where cuisine_Id in (SELECT cuisine_id
+FROM restaurants
+WHERE user_id = $!);
+
+UPDATE restaurants SET cuisine = $1, cuisine_id = $2, date_updated = $3 where user_id = $4 AND name = $5 RETURNING *;
+
+INSERT INTO restaurants (name, cuisine, cuisine_Id, date_created, date_updated) values ($1, $2, $3, $4, $5) ON DUPLICATE KEY UPDATE cuisine = $1, cuisine_id = $2, date_updated = $3 where user_id = $4 AND name = $5 RETURNING *;
+
+DELIMITER $$;   
+     CREATE PROCEDURE addRestaurant(
+IN
+name TEXT, 
+cuisine TEXT,
+cuisine_Id INTEGER, 
+date_created DATE, 
+date_updated DATE
+user_id TEXT)
+
+    BEGIN
+    DECLARE vexist int;
+
+      SELECT count(*) into vexist FROM restaurants --count because i will
+      WHERE name =name and user_id = user_id;  --this will check if exist or not
+
+        IF (vexist >= 1) then  --if exist then update
+        UPDATE restaurants
+            SET cuisine = cuisine, cuisine_Id = cuisine_Id, date_updated = date_updated
+            WHERE name =name and user_id = user_id;
+        ELSE
+          INSERT INTO restaurants (`name`, `cuisine`, `cuisine_id`, `date_created`,`dte_updated`,`user_id`) values (name, cuisine, cuisine_Id, date_created, date_updated, user_id);
+    END IF;
+    END $$
+    DELIMITER ;
