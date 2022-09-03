@@ -33,7 +33,7 @@ const getLeckerlog = async (userId) => {
 }
 
 const addOrUpdateRestaurant = async (restaurantName, cuisine, cuisine_id, date_created, date_updated, userId) => {
-    await db.pool.query(`
+    await pool.query(`
         INSERT INTO restaurants (name, cuisine, cuisine_Id, date_created, date_updated, user_id)
         VALUES ($1, $2, $3, $4, $5, $6)
         ON CONFLICT (name, user_id) DO UPDATE
@@ -47,9 +47,9 @@ const addOrUpdateRestaurant = async (restaurantName, cuisine, cuisine_id, date_c
         ]);
 };
 
-const addFoodOrdered = async (foodName, userId, cuisine_id, restaurant_id, comment, rating, ordered_at, image_path, date_created, date_updated) => {
-    return await db.pool.query("INSERT INTO food_ordered (name, user_id, cuisine_id, restaurant_id, comment, rating, ordered_at, image_path, date_created, date_updated) VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9, $10) RETURNING *",
-    [foodName, userId, cuisine_id, restaurant_id, comment, rating, ordered_at, image_path, date_created, date_updated]);
+const addFoodOrdered = async (foodName, userId, cuisine_id, restaurantName, comment, rating, ordered_at, image_path, date_created, date_updated) => {
+    return await pool.query("INSERT INTO food_ordered (name, user_id, cuisine_id, restaurant_id, comment, rating, ordered_at, image_path, date_created, date_updated) VALUES($1, $2, $3, (SELECT restaurant_id from restaurants where user_id = $2 and name = $4), $5, $6, $7, $8, $9, $10) RETURNING *",
+    [foodName, userId, cuisine_id,restaurantName, comment, rating, ordered_at, image_path, date_created, date_updated]);
 }
 
 const deleteFoodOrdered = async (userId, foodId) => {

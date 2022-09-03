@@ -99,10 +99,8 @@ app.post('/leckerlog/:id', async (req, res) => {
         const date_created = new Date().toISOString().split('T')[0];
         const date_updated = new Date().toISOString().split('T')[0];
         const updatedRestaurant = await db.addOrUpdateRestaurant(restaurantName, cuisine, cuisine_id, date_created, date_updated, id)
-        if (updatedRestaurant.rows[0].restaurant_id) {
-            const foodOrdered = await db.addFoodOrdered(foodName, userId, cuisine_id, updatedRestaurant.rows[0].restaurant_id, comment, rating, ordered_at, image_path, date_created, date_updated)
-            res.json([updatedRestaurant.rows, foodOrdered.rows]);
-        }
+        const foodOrdered = await db.addFoodOrdered(foodName, id, cuisine_id, restaurantName, comment, rating, ordered_at, image_path, date_created, date_updated)
+        res.json('restaurant and food added');
     } catch (error) {
         console.log(error)
         res.status(500).send({
