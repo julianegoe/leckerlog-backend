@@ -8,8 +8,10 @@ const admin = require('firebase-admin');
 const morgan = require('morgan');
 
 const corsOptions = {
-    origin: ['http://localhost:5173', '*'],
+    origin: ['http://localhost:5173', '*', 'https://lecker-log.netlify.app'],
   }
+app.use(cors(corsOptions));
+
 
 admin.initializeApp({
     credential: admin.credential.cert(JSON.parse(process.env.FB_SERVICE_ACCOUNT_KEY)),
@@ -18,7 +20,6 @@ admin.initializeApp({
 });
 
 // middleware
-app.use(cors(corsOptions));
 app.use(morgan('common'));
 app.use(express.json());
 app.use(logger('dev'));
