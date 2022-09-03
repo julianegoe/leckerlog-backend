@@ -10,7 +10,7 @@ const morgan = require('morgan');
 const corsOptions = {
     origin: ['http://localhost:5173', '*', 'https://lecker-log.netlify.app'],
   }
-app.use(cors(corsOptions));
+app.use(cors());
 
 
 admin.initializeApp({
