@@ -7,11 +7,8 @@ var logger = require('morgan');
 const admin = require('firebase-admin');
 const morgan = require('morgan');
 
-const corsOptions = {
-    origin: ['http://localhost:5173', '*', 'https://lecker-log.netlify.app'],
-  }
 app.use(cors({
-    origin: ['http://localhost:5173', 'https://lecker-log.netlify.app'],
+    origin: ['http://localhost:5173', 'https://lecker-log.netlify.app', 'https://main--lecker-log.netlify.app/'],
 }));
 
 
