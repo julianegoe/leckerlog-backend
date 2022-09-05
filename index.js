@@ -16,6 +16,7 @@ admin.initializeApp({
 // middleware
 app.use(cors({
     origin: '*',
+    allowedHeaders: ['AuthToken', 'Content-Type'],
 }));
 app.use(morgan('common'));
 app.use(express.json());
