@@ -121,3 +121,6 @@ user_id TEXT)
     END IF;
     END $$
     DELIMITER ;
+
+INSERT INTO food_ordered (name, user_id, cuisine_id, restaurant_id, comment, rating, ordered_at, image_path, date_created, date_updated) VALUES($1, $2, $3, (SELECT restaurant_id from restaurants where user_id = $2 and name = $4), $5, $6, $7, $8, $9, $10) RETURNING *
+

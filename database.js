@@ -26,10 +26,10 @@ const addNewCuisine = async (cuisineName) => {
 const getLeckerlog = async (userId) => {
     return await pool.query(`
     SELECT restaurants.*, subVirt.food_ordered
-    FROM restaurants
-    LEFT JOIN (SELECT restaurant_id, json_agg(row_to_json(food_ordered)) AS food_ordered FROM  food_ordered WHERE user_id = $1
+    FROM restaurants 
+    LEFT JOIN (SELECT restaurant_id, json_agg(row_to_json(food_ordered)) AS food_ordered FROM food_ordered WHERE user_id = $1
     GROUP  BY 1
-    ) subVirt ON subVirt.restaurant_id = restaurants.restaurant_id;`, [userId]);
+    ) subVirt ON subVirt.restaurant_id = restaurants.restaurant_id where user_id = $1;`, [userId]);
 }
 
 const addOrUpdateRestaurant = async (restaurantName, cuisine, cuisine_id, date_created, date_updated, userId) => {
