@@ -47,9 +47,9 @@ const addOrUpdateRestaurant = async (restaurantName, cuisine, cuisine_id, date_c
         ]);
 };
 
-const addFoodOrdered = async (foodName, userId, cuisine_id, restaurantName, comment, rating, ordered_at, image_path, date_created, date_updated) => {
-    return await pool.query("INSERT INTO food_ordered (name, user_id, cuisine_id, restaurant_id, comment, rating, ordered_at, image_path, date_created, date_updated) VALUES($1, $2, $3, (SELECT restaurant_id from restaurants where user_id = $2 and name = $4), $5, $6, $7, $8, $9, $10) RETURNING *",
-    [foodName, userId, cuisine_id,restaurantName, comment, rating, ordered_at, image_path, date_created, date_updated]);
+const addFoodOrdered = async (foodName, userId, cuisine_id, restaurantName, comment, rating, ordered_at, image_path, date_created, date_updated, tags) => {
+    return await pool.query("INSERT INTO food_ordered (name, user_id, cuisine_id, restaurant_id, comment, rating, ordered_at, image_path, date_created, date_updated, tags) VALUES($1, $2, $3, (SELECT restaurant_id from restaurants where user_id = $2 and name = $4), $5, $6, $7, $8, $9, $10, $11) RETURNING *",
+    [foodName, userId, cuisine_id,restaurantName, comment, rating, ordered_at, image_path, date_created, date_updated, tags]);
 }
 
 const deleteFoodOrdered = async (userId, foodId) => {
