@@ -133,6 +133,19 @@ app.delete('/food/:id/:foodId', async (req, res) => {
             message: error.message || "Some error occurred.",
         });
     }
-})
+});
+
+app.get('/food/:id/:foodId', async (req, res) => {
+    try {
+        const { id, foodId } = req.params;
+        const foodOrdered = await db.getFoodOrdered(id, foodId);
+        res.send(foodOrdered.rows);
+    } catch (error) {
+        console.log(error)
+        res.status(500).send({
+            message: error.message || "Some error occurred.",
+        });
+    }
+});
 
 app.listen(process.env.PORT || 8080, () => console.log('listening to Port' + process.env.PORT));

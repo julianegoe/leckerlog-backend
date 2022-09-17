@@ -58,6 +58,10 @@ const deleteFoodOrdered = async (userId, foodId) => {
     return await pool.query('DELETE from food_ordered WHERE user_id = $1 and food_id = $2 RETURNING *', [userId, foodId]);
 }
 
+const getFoodOrdered = async (userId, foodId) => {
+    return await pool.query('SELECT * from food_ordered WHERE user_id = $1 and food_id = $2', [userId, foodId]);
+}
+
 pool.on('connect', () => console.log('connected to db'));
 
 module.exports = {
@@ -69,4 +73,5 @@ module.exports = {
     addOrUpdateRestaurant,
     addFoodOrdered,
     deleteFoodOrdered,
+    getFoodOrdered,
 };
