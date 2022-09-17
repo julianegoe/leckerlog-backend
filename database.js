@@ -42,7 +42,7 @@ const addOrUpdateRestaurant = async (restaurantName, cuisine, cuisine_id, date_c
         cuisine = $2,
         cuisine_Id = $3,
         address = $7,
-        date_updated =  $5 RETURNING *;`, 
+        date_updated = $5 RETURNING *;`, 
         [
             restaurantName, cuisine, cuisine_id, date_created, date_updated, userId, address
         ]);
