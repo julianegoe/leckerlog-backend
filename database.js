@@ -32,18 +32,19 @@ const getLeckerlog = async (userId) => {
     ) subVirt ON subVirt.restaurant_id = restaurants.restaurant_id where user_id = $1;`, [userId]);
 }
 
-const addOrUpdateRestaurant = async (restaurantName, cuisine, cuisine_id, date_created, date_updated, userId) => {
+const addOrUpdateRestaurant = async (restaurantName, cuisine, cuisine_id, date_created, date_updated, userId, address) => {
     await pool.query(`
-        INSERT INTO restaurants (name, cuisine, cuisine_Id, date_created, date_updated, user_id)
-        VALUES ($1, $2, $3, $4, $5, $6)
+        INSERT INTO restaurants (name, cuisine, cuisine_Id, date_created, date_updated, user_id, address)
+        VALUES ($1, $2, $3, $4, $5, $6, $7)
         ON CONFLICT (name, user_id) DO UPDATE
         SET 
         name = $1,
         cuisine = $2,
         cuisine_Id = $3,
+        address = $7,
         date_updated =  $5 RETURNING *;`, 
         [
-            restaurantName, cuisine, cuisine_id, date_created, date_updated, userId,
+            restaurantName, cuisine, cuisine_id, date_created, date_updated, userId, address
         ]);
 };
 
