@@ -92,13 +92,13 @@ app.put('/cuisines/:name', async (req, res) => {
 // create a leckerlog record
 app.post('/leckerlog/:id', async (req, res) => {
     try {
-        const { restaurantName, foodName, cuisine, cuisine_id, comment, rating, ordered_at, image_path, tags } = req.body;
+        const { restaurantName, foodName, cuisine, cuisine_id, address, comment, rating, ordered_at, image_path, tags } = req.body;
         const { id } = req.params;
         const date_created = new Date().toISOString().split('T')[0];
         const date_updated = new Date().toISOString().split('T')[0];
-        await db.addOrUpdateRestaurant(restaurantName, cuisine, cuisine_id, date_created, date_updated, id)
+        await db.addOrUpdateRestaurant(restaurantName, cuisine, cuisine_id, date_created, date_updated, id, address)
         await db.addFoodOrdered(foodName, id, cuisine_id, restaurantName, comment, rating, ordered_at, image_path, date_created, date_updated, tags)
-        res.json('restaurant and food added');
+        res.json('added food and restaurant');
     } catch (error) {
         console.log(error)
         res.status(500).send({
