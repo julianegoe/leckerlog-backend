@@ -67,6 +67,11 @@ const updateFoodOrdered = async (name, cuisines_id, rating, comment, tags, food_
         [name, cuisines_id, rating, comment, tags, food_id, user_id, date_updated]);
 }
 
+const updateRestaurantCuisine = async (cuisine_id, restaurant_id, user_id) => {
+    return await pool.query('UPDATE restaurants SET cuisine_id = $1, cuisine = (SELECT name from cuisines WHERE cuisines.cuisine_id = $1) WHERE restaurant_id = $2 and user_id = $3 RETURNING *',
+        [cuisine_id, restaurant_id, user_id ]);
+}
+
 const updateImagePath = async (image_path, ordered_at, address, restaurant_id, food_id, user_id) => {
     return await pool.query('UPDATE food_ordered SET image_path = $1, ordered_at = $2  WHERE food_id = $5 and user_id = $6; UPDATE restaurants SET address = $3 WHERE restaurant_id = $4 and user_id = $6',
         [image_path, ordered_at, address, restaurant_id, food_id, user_id]);
@@ -86,4 +91,5 @@ module.exports = {
     getFoodOrdered,
     updateFoodOrdered,
     updateImagePath,
+    updateRestaurantCuisine,
 };
