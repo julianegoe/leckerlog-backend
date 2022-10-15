@@ -72,11 +72,6 @@ const updateRestaurantCuisine = async (cuisine_id, restaurantName, user_id, date
         [cuisine_id, restaurantName, user_id, date_updated ]);
 }
 
-const updateImagePath = async (image_path, ordered_at, address, restaurant_id, food_id, user_id) => {
-    return await pool.query('UPDATE food_ordered SET image_path = $1, ordered_at = $2  WHERE food_id = $5 and user_id = $6; UPDATE restaurants SET address = $3 WHERE restaurant_id = $4 and user_id = $6',
-        [image_path, ordered_at, address, restaurant_id, food_id, user_id]);
-}
-
 pool.on('connect', () => console.log('connected to db'));
 
 module.exports = {
@@ -90,6 +85,5 @@ module.exports = {
     deleteFoodOrdered,
     getFoodOrdered,
     updateFoodOrdered,
-    updateImagePath,
     updateRestaurantCuisine,
 };
