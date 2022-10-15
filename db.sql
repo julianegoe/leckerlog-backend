@@ -96,20 +96,20 @@ UPDATE restaurants SET cuisine = $1, cuisine_id = $2, date_updated = $3 where us
 
 INSERT INTO restaurants (name, cuisine, cuisine_Id, date_created, date_updated) values ($1, $2, $3, $4, $5) ON DUPLICATE KEY UPDATE cuisine = $1, cuisine_id = $2, date_updated = $3 where user_id = $4 AND name = $5 RETURNING *;
 
-DELIMITER $$;   
+DELIMITER $$;
      CREATE PROCEDURE addRestaurant(
 IN
-name TEXT, 
+name TEXT,
 cuisine TEXT,
-cuisine_Id INTEGER, 
-date_created DATE, 
+cuisine_Id INTEGER,
+date_created DATE,
 date_updated DATE
 user_id TEXT)
 
     BEGIN
-    DECLARE vexist int;
+    DECLARE exist int;
 
-      SELECT count(*) into vexist FROM restaurants --count because i will
+      SELECT count(*) into exist FROM restaurants --count because i will
       WHERE name =name and user_id = user_id;  --this will check if exist or not
 
         IF (vexist >= 1) then  --if exist then update

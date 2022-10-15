@@ -3,14 +3,13 @@ const express = require('express');
 const app = express();
 const cors = require('cors');
 const db = require('./database');
-var logger = require('morgan');
+let logger = require('morgan');
 const admin = require('firebase-admin');
 const morgan = require('morgan');
 
 admin.initializeApp({
     credential: admin.credential.cert(JSON.parse(process.env.FB_SERVICE_ACCOUNT_KEY)),
     databaseURL: process.env.FB_DATABASE_URL,
-    storageBucket: process.env.FB_STORAGE_NAME,
 });
 
 // middleware
@@ -135,6 +134,7 @@ app.delete('/food/:id/:foodId', async (req, res) => {
     }
 });
 
+// get food ordered
 app.get('/food/:id/:foodId', async (req, res) => {
     try {
         const { id, foodId } = req.params;
@@ -148,4 +148,19 @@ app.get('/food/:id/:foodId', async (req, res) => {
     }
 });
 
-app.listen(process.env.PORT || 8080, () => console.log('listening to Port' + process.env.PORT));
+//update food ordered
+app.post('/food/:foodId/:userId', async (req, res) => {
+    try {
+        const { name, rating, comment, cuisine_id, tags } = req.body;
+        const { userId, foodId } = req.params;
+        const foodOrdered = await db.updateFoodOrdered(name, cuisine_id, rating, comment, tags, foodId, userId);
+        res.send(foodOrdered.rows);
+    } catch (error) {
+        console.log(error)
+        res.status(500).send({
+            message: error.message || "Some error occurred.",
+        });
+    }
+})
+
+app.listen(process.env.PORT || 8080, () => console.log('listening to Port ' + process.env.PORT));

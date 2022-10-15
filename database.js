@@ -43,7 +43,7 @@ const addOrUpdateRestaurant = async (restaurantName, cuisine, cuisine_id, date_c
         cuisine_Id = $3,
         address = $7,
         date_updated = $5 
-        RETURNING *;`, 
+        RETURNING *;`,
         [
             restaurantName, cuisine, cuisine_id, date_created, date_updated, userId, address
         ]);
@@ -62,6 +62,11 @@ const getFoodOrdered = async (userId, foodId) => {
     return await pool.query('SELECT * from food_ordered WHERE user_id = $1 and food_id = $2', [userId, foodId]);
 }
 
+const updateFoodOrdered = async (name, cuisines_id, rating, comment, tags, food_id, user_id) => {
+    return await pool.query('UPDATE food_ordered SET name = $1, cuisine_id = $2, rating = $3, comment = $4, tags = $5 WHERE food_id = $6 and user_id = $7 RETURNING *;',
+        [name, cuisines_id, rating, comment, tags, food_id, user_id]);
+}
+
 pool.on('connect', () => console.log('connected to db'));
 
 module.exports = {
@@ -74,4 +79,5 @@ module.exports = {
     addFoodOrdered,
     deleteFoodOrdered,
     getFoodOrdered,
+    updateFoodOrdered,
 };
