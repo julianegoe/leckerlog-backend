@@ -155,7 +155,7 @@ app.post('/food/:foodId/:userId', async (req, res) => {
         const { userId, foodId } = req.params;
         const date_updated = new Date().toISOString().split('T')[0];
         const foodOrdered = await db.updateFoodOrdered(name, cuisine_id, rating, comment, tags, foodId, userId, date_updated);
-        await db.updateRestaurantCuisine(cuisine_id, restaurantName, userId);
+        await db.updateRestaurantCuisine(cuisine_id, restaurantName, userId, date_updated);
         res.send(foodOrdered.rows);
     } catch (error) {
         console.log(error)
