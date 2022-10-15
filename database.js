@@ -27,7 +27,7 @@ const getLeckerlog = async (userId) => {
     return await pool.query(`
     SELECT restaurants.*, subVirt.food_ordered
     FROM restaurants 
-    LEFT JOIN (SELECT restaurant_id, json_agg(row_to_json(food_ordered)) AS food_ordered FROM food_ordered WHERE user_id = $1
+    LEFT JOIN (SELECT restaurant_id, json_agg(row_to_json(food_ordered)) AS food_ordered FROM food_ordered WHERE user_id = $1                                                                                           
     GROUP  BY 1
     ) subVirt ON subVirt.restaurant_id = restaurants.restaurant_id where user_id = $1;`, [userId]);
 }
@@ -62,9 +62,14 @@ const getFoodOrdered = async (userId, foodId) => {
     return await pool.query('SELECT * from food_ordered WHERE user_id = $1 and food_id = $2', [userId, foodId]);
 }
 
-const updateFoodOrdered = async (name, cuisines_id, rating, comment, tags, food_id, user_id) => {
-    return await pool.query('UPDATE food_ordered SET name = $1, cuisine_id = $2, rating = $3, comment = $4, tags = $5 WHERE food_id = $6 and user_id = $7 RETURNING *;',
-        [name, cuisines_id, rating, comment, tags, food_id, user_id]);
+const updateFoodOrdered = async (name, cuisines_id, rating, comment, tags, food_id, user_id, date_updated) => {
+    return await pool.query('UPDATE food_ordered SET name = $1, cuisine_id = $2, rating = $3, comment = $4, tags = $5, date_updated = $8 WHERE food_id = $6 and user_id = $7 RETURNING *;',
+        [name, cuisines_id, rating, comment, tags, food_id, user_id, date_updated]);
+}
+
+const updateImagePath = async (image_path, ordered_at, address, restaurant_id, food_id, user_id) => {
+    return await pool.query('UPDATE food_ordered SET image_path = $1, ordered_at = $2  WHERE food_id = $5 and user_id = $6; UPDATE restaurants SET address = $3 WHERE restaurant_id = $4 and user_id = $6',
+        [image_path, ordered_at, address, restaurant_id, food_id, user_id]);
 }
 
 pool.on('connect', () => console.log('connected to db'));
@@ -80,4 +85,5 @@ module.exports = {
     deleteFoodOrdered,
     getFoodOrdered,
     updateFoodOrdered,
+    updateImagePath,
 };
