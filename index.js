@@ -95,9 +95,12 @@ app.post('/leckerlog/:id', async (req, res) => {
         const { id } = req.params;
         const date_created = new Date().toISOString().split('T')[0];
         const date_updated = new Date().toISOString().split('T')[0];
-        await db.addOrUpdateRestaurant(restaurantName, cuisine, cuisine_id, date_created, date_updated, id, address)
-        await db.addFoodOrdered(foodName, id, cuisine_id, restaurantName, comment, rating, ordered_at, image_path, date_created, date_updated, tags)
-        res.json('added food and restaurant');
+        const restaurant = await db.addOrUpdateRestaurant(restaurantName, cuisine, cuisine_id, date_created, date_updated, id, address)
+        const food = await db.addFoodOrdered(foodName, id, cuisine_id, restaurantName, comment, rating, ordered_at, image_path, date_created, date_updated, tags)
+        res.json({
+            ...restaurant.rows[0],
+            food_ordered: food.rows,
+        });
     } catch (error) {
         console.log(error)
         res.status(500).send({
@@ -135,11 +138,14 @@ app.delete('/food/:id/:foodId', async (req, res) => {
 });
 
 // get food ordered
-app.get('/food/:id/:foodId', async (req, res) => {
+app.get('/food/:foodId/:id', async (req, res) => {
     try {
         const { id, foodId } = req.params;
-        const foodOrdered = await db.getFoodOrdered(id, foodId);
-        res.send(foodOrdered.rows);
+        const record = await db.getFoodOrdered(id, foodId);
+        res.send({
+            ...record.restaurant.rows[0],
+            food_ordered: record.food.rows,
+        });
     } catch (error) {
         console.log(error)
         res.status(500).send({
@@ -156,7 +162,10 @@ app.post('/food/:foodId/:userId', async (req, res) => {
         const date_updated = new Date().toISOString().split('T')[0];
         const foodOrdered = await db.updateFoodOrdered(name, cuisine_id, rating, comment, tags, foodId, userId, date_updated);
         await db.updateRestaurantCuisine(cuisine_id, restaurantName, userId, date_updated);
-        res.send(foodOrdered.rows);
+        res.send({
+            ...foodOrdered.restaurant.rows[0],
+            foodOrdered: foodOrdered.updatedFood.rows,
+        });
     } catch (error) {
         console.log(error)
         res.status(500).send({
