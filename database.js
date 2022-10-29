@@ -8,7 +8,7 @@ const pool = new Pool({
 const getCuisinesForUser = async (userId) => {
     return await pool.query(`
     SELECT * from cuisines where cuisine_Id in (SELECT cuisine_id
-    FROM restaurants
+    FROM food_ordered
     WHERE user_id = $1);
     `, [userId]);
 }
