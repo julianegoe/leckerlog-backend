@@ -38,7 +38,7 @@ const checkAuth = (req, res, next) => {
 app.use('/leckerlog', checkAuth);
 app.use('/restaurants', checkAuth);
 app.use('/cuisines/:id', checkAuth);
-app.use('/food', checkAuth);
+/* app.use('/food', checkAuth); */
 
 // routes
 app.get('/', (_, res) => {
@@ -172,6 +172,44 @@ app.post('/food/:foodId/:userId', async (req, res) => {
             message: error.message || "Some error occurred.",
         });
     }
-})
+});
+
+// query food by name
+app.get('/food/:id', async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { food } = req.query;
+        let foods = []
+        try {
+            foods = food.map((oneFood) => {
+                return `%${oneFood}%`;
+            })
+        } catch(error) {
+            foods.push(`%${food}%`)
+        }
+        const record = await db.queryFoods(id, foods);
+        res.send(record.rows);
+    } catch (error) {
+        console.log(error)
+        res.status(500).send({
+            message: error.message || "Some error occurred.",
+        });
+    }
+});
+
+// query food by tag
+app.get('/tags/:id', async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { tag } = req.query;
+        const record = await db.queryTags(id, tag);
+        res.send(record.rows);
+    } catch (error) {
+        console.log(error)
+        res.status(500).send({
+            message: error.message || "Some error occurred.",
+        });
+    }
+});
 
 app.listen(process.env.PORT || 8080, () => console.log('listening to Port ' + process.env.PORT));

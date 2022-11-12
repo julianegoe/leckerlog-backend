@@ -82,6 +82,22 @@ const updateRestaurantCuisine = async (cuisine_id, restaurantName, user_id, date
         [cuisine_id, restaurantName, user_id, date_updated ]);
 }
 
+const queryFoods = async (userId, searchQuery) => {
+    return await pool.query(`SELECT restaurants.*, foodArray.food_ordered
+    FROM restaurants
+    LEFT JOIN (SELECT restaurant_id, json_agg(row_to_json(food_ordered)) AS food_ordered FROM food_ordered WHERE user_id = $1 AND food_ordered.name ILIKE ANY($2)
+    GROUP BY 1
+    ) foodArray ON foodArray.restaurant_id = restaurants.restaurant_id WHERE user_id = $1 AND restaurants.restaurant_id IN (SELECT restaurant_id FROM food_ordered WHERE food_ordered.name ILIKE ANY($2))`, [userId, searchQuery]);
+}
+
+const queryTags = async (userId, searchQuery) => {
+    return await pool.query(`SELECT restaurants.*, foodArray.food_ordered
+    FROM restaurants
+    LEFT JOIN (SELECT restaurant_id, json_agg(row_to_json(food_ordered)) AS food_ordered FROM food_ordered WHERE user_id = $1 AND food_ordered.tags && $2
+    GROUP BY 1
+    ) foodArray ON foodArray.restaurant_id = restaurants.restaurant_id WHERE user_id = $1 AND restaurants.restaurant_id IN (SELECT restaurant_id FROM food_ordered WHERE food_ordered.tags && $2)`, [userId, searchQuery]);
+}
+
 pool.on('connect', () => console.log('connected to db'));
 
 module.exports = {
@@ -96,4 +112,6 @@ module.exports = {
     getFoodOrdered,
     updateFoodOrdered,
     updateRestaurantCuisine,
+    queryFoods,
+    queryTags,
 };
