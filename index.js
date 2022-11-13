@@ -187,6 +187,7 @@ app.get('/food/:id', async (req, res) => {
         } catch(error) {
             foods.push(`%${food}%`)
         }
+        console.log(foods);
         const record = await db.queryFoods(id, foods);
         res.send(record.rows);
     } catch (error) {
@@ -200,9 +201,17 @@ app.get('/food/:id', async (req, res) => {
 // query food by tag
 app.get('/tags/:id', async (req, res) => {
     try {
+        let tags = [];
         const { id } = req.params;
         const { tag } = req.query;
-        const record = await db.queryTags(id, tag);
+        try {
+            tags = tag.map((oneTag) => {
+                return oneTag.toLowerCase();
+            })
+        } catch(error) {
+            tags.push(tag.toLowerCase())
+        }
+        const record = await db.queryTags(id, tags);
         res.send(record.rows);
     } catch (error) {
         console.log(error)

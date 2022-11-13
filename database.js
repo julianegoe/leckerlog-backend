@@ -93,9 +93,9 @@ const queryFoods = async (userId, searchQuery) => {
 const queryTags = async (userId, searchQuery) => {
     return await pool.query(`SELECT restaurants.*, foodArray.food_ordered
     FROM restaurants
-    LEFT JOIN (SELECT restaurant_id, json_agg(row_to_json(food_ordered)) AS food_ordered FROM food_ordered WHERE user_id = $1 AND food_ordered.tags && $2
+    LEFT JOIN (SELECT restaurant_id, json_agg(row_to_json(food_ordered)) AS food_ordered FROM food_ordered WHERE user_id = $1 AND lower(food_ordered.tags::text)::text[] && $2
     GROUP BY 1
-    ) foodArray ON foodArray.restaurant_id = restaurants.restaurant_id WHERE user_id = $1 AND restaurants.restaurant_id IN (SELECT restaurant_id FROM food_ordered WHERE food_ordered.tags && $2)`, [userId, searchQuery]);
+    ) foodArray ON foodArray.restaurant_id = restaurants.restaurant_id WHERE user_id = $1 AND restaurants.restaurant_id IN (SELECT restaurant_id FROM food_ordered WHERE lower(food_ordered.tags::text)::text[] && $2)`, [userId, searchQuery]);
 }
 
 pool.on('connect', () => console.log('connected to db'));
