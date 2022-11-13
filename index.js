@@ -38,7 +38,8 @@ const checkAuth = (req, res, next) => {
 app.use('/leckerlog', checkAuth);
 app.use('/restaurants', checkAuth);
 app.use('/cuisines/:id', checkAuth);
-/* app.use('/food', checkAuth); */
+app.use('/food', checkAuth);
+app.use('/tag', checkAuth);
 
 // routes
 app.get('/', (_, res) => {
@@ -199,17 +200,17 @@ app.get('/food/:id', async (req, res) => {
 });
 
 // query food by tag
-app.get('/tags/:id', async (req, res) => {
+app.get('/tag/:id', async (req, res) => {
     try {
         let tags = [];
         const { id } = req.params;
         const { tag } = req.query;
         try {
             tags = tag.map((oneTag) => {
-                return oneTag.toLowerCase();
+                return oneTag
             })
         } catch(error) {
-            tags.push(tag.toLowerCase())
+            tags.push(tag)
         }
         const record = await db.queryTags(id, tags);
         res.send(record.rows);
