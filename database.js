@@ -2,12 +2,12 @@ const Pool = require('pg').Pool;
 
 const pool = new Pool({
     connectionString: process.env.DATABASE_URL,
-    ssl: { rejectUnauthorized: false },
+    // ssl: { rejectUnauthorized: false },
 });
 
 const getCuisinesForUser = async (userId) => {
     return await pool.query(`
-    SELECT * from cuisines where cuisine_Id in (SELECT cuisine_id
+    SELECT * from cuisines where cuisine_Id in (SELECT distinct cuisine_id
     FROM food_ordered
     WHERE user_id = $1);
     `, [userId]);
@@ -32,20 +32,19 @@ const getLeckerlog = async (userId) => {
     ) subVirt ON subVirt.restaurant_id = restaurants.restaurant_id where user_id = $1;`, [userId]);
 }
 
-const addOrUpdateRestaurant = async (restaurantName, cuisine, cuisine_id, date_created, date_updated, userId, address) => {
+const addOrUpdateRestaurant = async (restaurantName, cuisine_id, date_created, date_updated, userId, address) => {
     await pool.query(`
-        INSERT INTO restaurants (name, cuisine, cuisine_Id, date_created, date_updated, user_id, address)
-        VALUES ($1, $2, $3, $4, $5, $6, $7)
+        INSERT INTO restaurants (name, cuisine_Id, date_created, date_updated, user_id, address)
+        VALUES ($1, $2, $3, $4, $5, $6)
         ON CONFLICT (name, user_id) DO UPDATE
         SET 
         name = $1,
-        cuisine = $2,
-        cuisine_Id = $3,
-        address = $7,
-        date_updated = $5 
+        cuisine_Id = $2,
+        address = $6,
+        date_updated = $4 
         RETURNING *;`,
         [
-            restaurantName, cuisine, cuisine_id, date_created, date_updated, userId, address
+            restaurantName, cuisine_id, date_created, date_updated, userId, address
         ]);
 };
 
@@ -78,7 +77,7 @@ const updateFoodOrdered = async (name, cuisines_id, rating, comment, tags, food_
 }
 
 const updateRestaurantCuisine = async (cuisine_id, restaurantName, user_id, date_updated) => {
-    return await pool.query('UPDATE restaurants SET cuisine_id = $1, cuisine = (SELECT name from cuisines WHERE cuisines.cuisine_id = $1), date_updated = $4 WHERE name = $2 and user_id = $3 RETURNING *',
+    return await pool.query('UPDATE restaurants SET cuisine_id = $1, date_updated = $4 WHERE name = $2 and user_id = $3 RETURNING *',
         [cuisine_id, restaurantName, user_id, date_updated ]);
 }
 
