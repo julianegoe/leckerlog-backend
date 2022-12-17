@@ -44,7 +44,7 @@ app.use('/tag', checkAuth);
 // routes
 app.get('/', (_, res) => {
     res.json({
-        message: 'hallo welt',
+        message: 'hallo welt!',
     })
 })
 
