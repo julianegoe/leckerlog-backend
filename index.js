@@ -6,10 +6,16 @@ const db = require('./database');
 let logger = require('morgan');
 const admin = require('firebase-admin');
 const morgan = require('morgan');
+const { auth } = require('express-oauth2-jwt-bearer');
 
 admin.initializeApp({
     credential: admin.credential.cert(JSON.parse(process.env.FB_SERVICE_ACCOUNT_KEY)),
     databaseURL: process.env.FB_DATABASE_URL,
+});
+
+const checkJwt = auth({
+  audience: 'https://api.leckerlog.dwk.li',
+  issuerBaseURL: `https://dev-rv3t1xmkfttbcgdv.us.auth0.com/`,
 });
 
 // middleware
@@ -35,11 +41,12 @@ const checkAuth = (req, res, next) => {
     }
 };
 
-app.use('/leckerlog', checkAuth);
-app.use('/restaurants', checkAuth);
+// app.use('/leckerlog', checkAuth);
+/* app.use('/restaurants', checkAuth);
 app.use('/cuisines/:id', checkAuth);
 app.use('/food', checkAuth);
 app.use('/tag', checkAuth);
+app.use('/leckerlog', checkJwt) */
 
 // routes
 app.get('/', (_, res) => {
@@ -92,11 +99,11 @@ app.put('/cuisines/:name', async (req, res) => {
 // create a leckerlog record
 app.post('/leckerlog/:id', async (req, res) => {
     try {
-        const { restaurantName, foodName, cuisine, cuisine_id, address, comment, rating, ordered_at, image_path, tags } = req.body;
+        const { restaurantName, foodName, cuisine_id, address, comment, rating, ordered_at, image_path, tags } = req.body;
         const { id } = req.params;
         const date_created = new Date().toISOString().split('T')[0];
         const date_updated = new Date().toISOString().split('T')[0];
-        const restaurant = await db.addOrUpdateRestaurant(restaurantName, cuisine, cuisine_id, date_created, date_updated, id, address)
+        const restaurant = await db.addOrUpdateRestaurant(restaurantName, cuisine_id, date_created, date_updated, id, address)
         const food = await db.addFoodOrdered(foodName, id, cuisine_id, restaurantName, comment, rating, ordered_at, image_path, date_created, date_updated, tags)
         res.json({
             ...restaurant.rows[0],

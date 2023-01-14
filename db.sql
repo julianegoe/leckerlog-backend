@@ -1,9 +1,10 @@
 CREATE TABLE restaurants(
     restaurant_id SERIAL PRIMARY KEY,
     name TEXT NOT NULL,
-    cuisine TEXT NOT NULL,
+    cuisine_id INTEGER NOT NULL,
     date_created DATE NOT NULL,
     date_updated DATE NOT NULL,
+    address TEXT,
     user_id TEXT,
 
     CONSTRAINT FK_restaurants_cuisines FOREIGN KEY(cuisine_id)
@@ -17,6 +18,7 @@ CREATE TABLE cuisines(
 
 CREATE TABLE food_ordered(
     food_id SERIAL PRIMARY KEY,
+    restaurant_id INTEGER,
     name TEXT NOT NULL,
     date_created DATE NOT NULL,
     date_updated DATE NOT NUll,
@@ -24,6 +26,7 @@ CREATE TABLE food_ordered(
     rating INTEGER,
     ordered_at DATE,
     image_path TEXT,
+    tags TEXT [],
     user_id TEXT,
 
 
