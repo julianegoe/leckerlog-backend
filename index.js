@@ -1,22 +1,24 @@
 require('dotenv').config();
 const express = require('express');
-const app = express();
+const bcrypt = require('bcrypt');
 const cors = require('cors');
+const Minio = require('minio')
+const multer = require('multer');
 const db = require('./database');
 let logger = require('morgan');
-const admin = require('firebase-admin');
 const morgan = require('morgan');
-const { auth } = require('express-oauth2-jwt-bearer');
+const passport = require('passport');
+require('./passport');
 
-admin.initializeApp({
-    credential: admin.credential.cert(JSON.parse(process.env.FB_SERVICE_ACCOUNT_KEY)),
-    databaseURL: process.env.FB_DATABASE_URL,
+const app = express();
+
+const client = new Minio.Client({
+    endPoint: process.env.MINIO_STORANGE_ENDPOINT,
+    accessKey: process.env.MINIO_ACCESS_KEY,
+    secretKey: process.env.MINIO_SECRET_KEY
 });
 
-const checkJwt = auth({
-  audience: 'https://api.leckerlog.dwk.li',
-  issuerBaseURL: `https://dev-rv3t1xmkfttbcgdv.us.auth0.com/`,
-});
+const upload = multer({ dest: 'uploads/' })
 
 // middleware
 app.use(cors({
@@ -24,36 +26,43 @@ app.use(cors({
     allowedHeaders: ['AuthToken', 'Content-Type'],
 }));
 app.use(morgan('common'));
-app.use(express.json());
 app.use(logger('dev'));
+app.use(express.json());
 
-const checkAuth = (req, res, next) => {
-    if (req.headers.authtoken) {
-        admin.auth().verifyIdToken(req.headers.authtoken)
-            .then(() => {
-                next();
-            }).catch((error) => {
-                console.log(error);
-                res.status(403).send('Unauthorized')
-            });
-    } else {
-        res.status(403).send('Unauthorized')
-    }
-};
-
-// app.use('/leckerlog', checkAuth);
-/* app.use('/restaurants', checkAuth);
-app.use('/cuisines/:id', checkAuth);
-app.use('/food', checkAuth);
-app.use('/tag', checkAuth);
-app.use('/leckerlog', checkJwt) */
+app.use('/', passport.authenticate('jwt', { session: false }))
 
 // routes
+
+require('./auth')(app);
+
 app.get('/', (_, res) => {
     res.json({
-        message: 'hallo welt',
+        message: 'Welcome to Leckerlog REST API',
     })
 })
+
+app.post('/register', async (req, res) => {
+    const { email, password } = req.body;
+    const user = await db.findUserByEmail(email);
+    if (user.rows[0]) {
+        console.log(user.rows[0]);
+        res.status(200).json({
+            message: 'User already exists.',
+            user: user.rows[0],
+        })
+    }
+    else {
+        bcrypt.hash(password, 10, function(err, hash) {
+            if (err) {
+                res.status(500).json(err);
+            } else {
+                db.registerUser(email, hash).then((user) => {
+                    res.status(200).json(user)
+                });
+            }
+        });
+    }
+});
 
 // get all cuisines for user
 app.get('/cuisines/:id', async (req, res) => {
@@ -228,5 +237,54 @@ app.get('/tag/:id', async (req, res) => {
         });
     }
 });
+
+
+app.get('/list', async (_, res) => {
+    let data = []
+    var stream = client.listObjects('images', '', true)
+    stream.on('data', function (obj) { data.push(obj) })
+    stream.on("end", function () {
+        res.status(200).json(data)
+    })
+    stream.on('error', function (err) {
+        res.status(404).send(err.toString())
+    })
+})
+
+app.post('/upload', upload.single("file"), async (req, res) => {
+    var metaData = {
+        'Content-Type': 'application/octet-stream',
+    }
+    const { file } = req;
+    if (file) {
+        const path = file.path;
+        const fileName = file.originalname;
+        client.fPutObject("images", fileName, path, metaData, function (error, objInfo) {
+            if (error) res.status(500).json(error)
+            res.status(200).json(objInfo)
+        });
+    }
+});
+
+app.get("/download", function (req, res) {
+    client.getObject('images', req.query.filename, (err, dataStream) => {
+        if (err) {
+            res.status(404).send(err.toString())
+        } else {
+            dataStream.pipe(res)
+        }
+    });
+});
+
+app.get('/create/bucket', async (req, res) => {
+    const { bucketname } = req.query;
+    client.makeBucket(bucketname, 'eu-east-1', function(err) {
+        if (err) return console.log('Error creating bucket.', err)
+        console.log('Bucket created successfully in "eu-east-1".')
+        res.status(200).json({
+            message: 'Bucket successfully created.'
+        })
+      })
+})
 
 app.listen(process.env.PORT || 8080, () => console.log('listening to Port ' + process.env.PORT));

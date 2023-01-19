@@ -5,6 +5,23 @@ const pool = new Pool({
     // ssl: { rejectUnauthorized: false },
 });
 
+const findUserByEmail = async (email) => {
+    return await pool.query(`SELECT * from users WHERE EXISTS
+    (SELECT * FROM users WHERE email = $1);`, [email])
+}
+
+const findUserById = async (user_id) => {
+    return await pool.query(`SELECT * from users WHERE EXISTS
+    (SELECT user_id FROM users WHERE user_id = $1);`, [user_id])
+}
+
+const registerUser = async (email, password) => {
+    return await pool.query(`
+    INSERT INTO users (email, password) 
+    VALUES ($1, $2) RETURNING *;
+    `, [email, password]);
+}
+
 const getCuisinesForUser = async (userId) => {
     return await pool.query(`
     SELECT * from cuisines where cuisine_Id in (SELECT distinct cuisine_id
@@ -50,7 +67,7 @@ const addOrUpdateRestaurant = async (restaurantName, cuisine_id, date_created, d
 
 const addFoodOrdered = async (foodName, userId, cuisine_id, restaurantName, comment, rating, ordered_at, image_path, date_created, date_updated, tags) => {
     return await pool.query("INSERT INTO food_ordered (name, user_id, cuisine_id, restaurant_id, comment, rating, ordered_at, image_path, date_created, date_updated, tags) VALUES($1, $2, $3, (SELECT restaurant_id from restaurants where user_id = $2 and name = $4), $5, $6, $7, $8, $9, $10, $11) RETURNING *",
-    [foodName, userId, cuisine_id,restaurantName, comment, rating, ordered_at, image_path, date_created, date_updated, tags]);
+        [foodName, userId, cuisine_id, restaurantName, comment, rating, ordered_at, image_path, date_created, date_updated, tags]);
 }
 
 const deleteFoodOrdered = async (userId, foodId) => {
@@ -67,7 +84,7 @@ const getFoodOrdered = async (userId, foodId) => {
 }
 
 const updateFoodOrdered = async (name, cuisines_id, rating, comment, tags, food_id, user_id, date_updated) => {
-    const updatedFood =  await pool.query('UPDATE food_ordered SET name = $1, cuisine_id = $2, rating = $3, comment = $4, tags = $5, date_updated = $8 WHERE food_id = $6 and user_id = $7 RETURNING *;',
+    const updatedFood = await pool.query('UPDATE food_ordered SET name = $1, cuisine_id = $2, rating = $3, comment = $4, tags = $5, date_updated = $8 WHERE food_id = $6 and user_id = $7 RETURNING *;',
         [name, cuisines_id, rating, comment, tags, food_id, user_id, date_updated]);
     const restaurant = await pool.query('SELECT * from restaurants WHERE restaurant_id = (SELECT restaurant_id from food_ordered WHERE food_id = $1)', [food_id]);
     return {
@@ -78,7 +95,7 @@ const updateFoodOrdered = async (name, cuisines_id, rating, comment, tags, food_
 
 const updateRestaurantCuisine = async (cuisine_id, restaurantName, user_id, date_updated) => {
     return await pool.query('UPDATE restaurants SET cuisine_id = $1, date_updated = $4 WHERE name = $2 and user_id = $3 RETURNING *',
-        [cuisine_id, restaurantName, user_id, date_updated ]);
+        [cuisine_id, restaurantName, user_id, date_updated]);
 }
 
 const queryFoods = async (userId, searchQuery) => {
@@ -113,4 +130,7 @@ module.exports = {
     updateRestaurantCuisine,
     queryFoods,
     queryTags,
+    registerUser,
+    findUserByEmail,
+    findUserById,
 };
