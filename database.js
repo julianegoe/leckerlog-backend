@@ -10,7 +10,8 @@ const findUserByEmail = async (email) => {
 }
 
 const findUserById = async (user_id) => {
-    return await pool.query(`SELECT * from users user_id = $1);`, [user_id])
+    console.log(user_id)
+    return await pool.query(`SELECT * from users WHERE user_id = $1;`, [user_id])
 }
 
 const registerUser = async (email, password) => {
