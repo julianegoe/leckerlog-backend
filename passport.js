@@ -17,11 +17,15 @@ passport.use(new LocalStrategy({
             return callback(null, false, {message: 'Incorrect username.'});
         }
         if (user.rows[0]) {
-            bcrypt.compare(password, user.rows[0].password).then((result) => {
+            bcrypt.compare(password, user.rows[0].password).then((result, error) => {
+                console.log(user.rows[0], result);
+                if (error) {
+                    return callback(null, false, {message: 'incorrect password'});
+                }
                 if (result) {
                     return callback(null, user.rows[0])
                 } else {
-                    return callback(null, false, {message: 'Incorrect password.'});
+                    return callback(null, false, {message: 'server error'});
                 }
             }).catch(error => callback(error, false, { message: ':((('}));
         };

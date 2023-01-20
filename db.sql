@@ -16,6 +16,16 @@ CREATE TABLE cuisines(
     name TEXT NOT NULL,
 )
 
+CREATE TABLE users(
+    user_id uuid DEFAULT gen_random_uuid() PRIMARY KEY,
+    email TEXT NOT NULL,
+    username TEXT,
+    password TEXT NOT NULL,
+)
+
+INSERT INTO users (email, password)
+VALUES ();
+
 CREATE TABLE food_ordered(
     food_id SERIAL PRIMARY KEY,
     restaurant_id INTEGER,

@@ -6,13 +6,11 @@ const pool = new Pool({
 });
 
 const findUserByEmail = async (email) => {
-    return await pool.query(`SELECT * from users WHERE EXISTS
-    (SELECT * FROM users WHERE email = $1);`, [email])
+    return await pool.query(`SELECT * from users WHERE email = $1;`, [email])
 }
 
 const findUserById = async (user_id) => {
-    return await pool.query(`SELECT * from users WHERE EXISTS
-    (SELECT user_id FROM users WHERE user_id = $1);`, [user_id])
+    return await pool.query(`SELECT * from users user_id = $1);`, [user_id])
 }
 
 const registerUser = async (email, password) => {

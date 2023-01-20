@@ -29,10 +29,12 @@ app.use(morgan('common'));
 app.use(logger('dev'));
 app.use(express.json());
 
-app.use('/', passport.authenticate('jwt', { session: false }))
+app.use('/cuisines', passport.authenticate('jwt', { session: false }));
+app.use('/leckerlog', passport.authenticate('jwt', { session: false }));
+app.use('/download', passport.authenticate('jwt', { session: false }));
+app.use('/upload', passport.authenticate('jwt', { session: false }));
 
 // routes
-
 require('./auth')(app);
 
 app.get('/', (_, res) => {
