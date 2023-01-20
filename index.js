@@ -11,6 +11,10 @@ const passport = require('passport');
 require('./passport');
 
 const app = express();
+app.use(cors({
+    origin: '*',
+}));
+
 
 const client = new Minio.Client({
     endPoint: process.env.MINIO_STORANGE_ENDPOINT,
@@ -21,15 +25,11 @@ const client = new Minio.Client({
 const upload = multer({ dest: 'uploads/' })
 
 // middleware
-app.use(cors({
-    origin: '*',
-    allowedHeaders: ['AuthToken', 'Content-Type'],
-}));
 app.use(morgan('common'));
 app.use(logger('dev'));
 app.use(express.json());
 
-app.use('/', passport.authenticate('jwt', { session: false }))
+app.use('/cuisines', passport.authenticate('jwt', { session: false }));
 /* app.use('/cuisines', passport.authenticate('jwt', { session: false }));
 app.use('/leckerlog', passport.authenticate('jwt', { session: false }));
 app.use('/download', passport.authenticate('jwt', { session: false }));
