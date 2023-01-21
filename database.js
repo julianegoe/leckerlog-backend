@@ -48,25 +48,25 @@ const getLeckerlog = async (userId) => {
     ) subVirt ON subVirt.restaurant_id = restaurants.restaurant_id where user_id = $1;`, [userId]);
 }
 
-const addOrUpdateRestaurant = async (restaurantName, cuisine_id, date_created, date_updated, userId, address) => {
-    await pool.query(`
-        INSERT INTO restaurants (name, cuisine_Id, date_created, date_updated, user_id, address)
+const addOrUpdateRestaurant = async (restaurant_name, cuisine_id, date_created, date_updated, user_id, address) => {
+    return await pool.query(`
+        INSERT INTO restaurants (name, cuisine_id, date_created, date_updated, user_id, address)
         VALUES ($1, $2, $3, $4, $5, $6)
         ON CONFLICT (name, user_id) DO UPDATE
         SET 
         name = $1,
-        cuisine_Id = $2,
+        cuisine_id = $2,
         address = $6,
-        date_updated = $4 
-        RETURNING *;`,
+        date_updated = $4
+        RETURNING *`,
         [
-            restaurantName, cuisine_id, date_created, date_updated, userId, address
+            restaurant_name, cuisine_id, date_created, date_updated, user_id, address
         ]);
 };
 
-const addFoodOrdered = async (foodName, userId, cuisine_id, restaurantName, comment, rating, ordered_at, image_path, date_created, date_updated, tags) => {
-    return await pool.query("INSERT INTO food_ordered (name, user_id, cuisine_id, restaurant_id, comment, rating, ordered_at, image_path, date_created, date_updated, tags) VALUES($1, $2, $3, (SELECT restaurant_id from restaurants where user_id = $2 and name = $4), $5, $6, $7, $8, $9, $10, $11) RETURNING *",
-        [foodName, userId, cuisine_id, restaurantName, comment, rating, ordered_at, image_path, date_created, date_updated, tags]);
+const addFoodOrdered = async (food_name, userId, cuisine_id, restaurant_name, comment, rating, ordered_at, image_path, date_created, date_updated, tags) => {
+    return await pool.query("INSERT INTO food_ordered (name, user_id, cuisine_id, restaurant_id, comment, rating, ordered_at, image_path, date_created, date_updated, tags) VALUES($1, $2, $3, (SELECT restaurant_id from restaurants where user_id = $2 and name = $4), $5, $6, $7, $8, $9, $10, $11) RETURNING *;",
+        [food_name, userId, cuisine_id, restaurant_name, comment, rating, ordered_at, image_path, date_created, date_updated, tags]);
 }
 
 const deleteFoodOrdered = async (userId, foodId) => {

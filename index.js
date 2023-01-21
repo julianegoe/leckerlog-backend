@@ -12,7 +12,7 @@ require('./passport');
 
 const app = express();
 app.use(cors({
-    origin: '*',
+    origin: ['https://prod.leckerlog.dwk.li', 'http://localhost:5173'],
 }));
 
 
@@ -111,15 +111,18 @@ app.put('/cuisines/:name', async (req, res) => {
 // create a leckerlog record
 app.post('/leckerlog/:id', async (req, res) => {
     try {
-        const { restaurantName, foodName, cuisine_id, address, comment, rating, ordered_at, image_path, tags } = req.body;
+        const { restaurant_name, food_name, cuisine_id, address, comment, rating, ordered_at, image_path, tags } = req.body;
         const { id } = req.params;
         const date_created = new Date().toISOString().split('T')[0];
         const date_updated = new Date().toISOString().split('T')[0];
-        const restaurant = await db.addOrUpdateRestaurant(restaurantName, cuisine_id, date_created, date_updated, id, address)
-        const food = await db.addFoodOrdered(foodName, id, cuisine_id, restaurantName, comment, rating, ordered_at, image_path, date_created, date_updated, tags)
-        res.json({
-            ...restaurant.rows[0],
-            food_ordered: food.rows,
+        const restaurant = await db.addOrUpdateRestaurant(restaurant_name, cuisine_id, date_created, date_updated, id, address)
+        const food = await db.addFoodOrdered(food_name, id, cuisine_id, restaurant_name, comment, rating, ordered_at, image_path, date_created, date_updated, tags)
+        res.status(200).json({
+            message: 'upload successful',
+            data: {
+                ...restaurant.rows[0],
+                food_ordered: food.rows,
+            }
         });
     } catch (error) {
         console.log(error)
@@ -163,7 +166,7 @@ app.get('/food/:foodId/:id', async (req, res) => {
         const { id, foodId } = req.params;
         const record = await db.getFoodOrdered(id, foodId);
         res.send({
-            ...record.restaurant.rows[0],
+            ...record.restaurant.rows,
             food_ordered: record.food.rows,
         });
     } catch (error) {

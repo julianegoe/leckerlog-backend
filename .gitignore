@@ -4,3 +4,4 @@ config/
 package-lock.json
 .idea
 db
+uploads/
