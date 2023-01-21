@@ -1,6 +1,8 @@
 require('dotenv').config();
 const express = require('express');
 const bcrypt = require('bcrypt');
+const sharp = require('sharp');
+const { v4: uuidv4 } = require('uuid');
 const cors = require('cors');
 const Minio = require('minio')
 const multer = require('multer');
@@ -22,7 +24,23 @@ const client = new Minio.Client({
     secretKey: process.env.MINIO_SECRET_KEY
 });
 
-const upload = multer({ dest: 'uploads/' })
+var upload = multer({
+    limits: { fileSize: 10 * 1000 * 1000 }, // now allowing user uploads up to 10MB
+    fileFilter: function(req, file, callback) {
+      let fileExtension = (file.originalname.split('.')[file.originalname.split('.').length-1]).toLowerCase(); // convert extension to lower case
+      if (["png", "jpg", "jpeg"].indexOf(fileExtension) === -1) {
+        return callback('Wrong file type', false);
+      }
+      file.extension = fileExtension.replace(/jpeg/i, 'jpg'); // all jpeg images to end .jpg
+      callback(null, true);
+    },
+    storage: multer.diskStorage({
+      destination: '/tmp', // store in local filesystem
+      filename: function (req, file, cb) {
+        cb(null, `${uuidv4()}.${file.extension}`) // uuid
+      }
+    })
+  });
 
 // middleware
 app.use(morgan('common'));
@@ -54,7 +72,7 @@ app.post('/register', async (req, res) => {
         })
     }
     else {
-        bcrypt.hash(password, 10, function(err, hash) {
+        bcrypt.hash(password, 10, function (err, hash) {
             if (err) {
                 res.status(500).json(err);
             } else {
@@ -206,7 +224,7 @@ app.get('/food/:id', async (req, res) => {
             foods = food.map((oneFood) => {
                 return `%${oneFood}%`;
             })
-        } catch(error) {
+        } catch (error) {
             foods.push(`%${food}%`)
         }
         console.log(foods);
@@ -230,7 +248,7 @@ app.get('/tag/:id', async (req, res) => {
             tags = tag.map((oneTag) => {
                 return oneTag
             })
-        } catch(error) {
+        } catch (error) {
             tags.push(tag)
         }
         const record = await db.queryTags(id, tags);
@@ -257,18 +275,24 @@ app.get('/list', async (_, res) => {
 })
 
 app.post('/upload', upload.single("file"), async (req, res) => {
-    var metaData = {
-        'Content-Type': 'application/octet-stream',
-    }
     const { file } = req;
     if (file) {
-        const path = file.path;
-        const fileName = file.originalname;
-        client.fPutObject("images", fileName, path, metaData, function (error, objInfo) {
-            if (error) res.status(500).json(error)
-            res.status(200).json(objInfo)
-        });
-    }
+        const image = sharp(file.path);
+        image
+            .resize(1500, 1500, {
+                fit: 'outside',
+            })
+            .toBuffer((err, data, info) => {
+                if (err) res.status(500).json(err);
+                console.log(info);
+                client.putObject('images', `${uuidv4()}.${info.jpeg}`, data, info.size, function(err, objInfo) {
+                    if(err) {
+                        return res.status(500).json(err);
+                    }
+                 res.status(200).json(objInfo)
+                });
+              })
+            };
 });
 
 app.get("/download", function (req, res) {
@@ -283,13 +307,13 @@ app.get("/download", function (req, res) {
 
 app.get('/create/bucket', async (req, res) => {
     const { bucketname } = req.query;
-    client.makeBucket(bucketname, 'eu-east-1', function(err) {
+    client.makeBucket(bucketname, 'eu-east-1', function (err) {
         if (err) return console.log('Error creating bucket.', err)
         console.log('Bucket created successfully in "eu-east-1".')
         res.status(200).json({
             message: 'Bucket successfully created.'
         })
-      })
+    })
 })
 
 app.listen(process.env.PORT || 8080, () => console.log('listening to Port ' + process.env.PORT));
