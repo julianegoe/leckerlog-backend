@@ -68,8 +68,8 @@ const addFoodOrdered = async (food_name, userId, cuisine_id, restaurant_name, co
         [food_name, userId, cuisine_id, restaurant_name, comment, rating, ordered_at, image_path, date_created, date_updated, tags]);
 }
 
-const deleteFoodOrdered = async (userId, foodId) => {
-    return await pool.query('DELETE from food_ordered WHERE user_id = $1 and food_id = $2 RETURNING *', [userId, foodId]);
+const deleteFoodOrdered = async (foodId) => {
+    return await pool.query('DELETE from food_ordered WHERE food_id = $1 RETURNING *', [foodId]);
 }
 
 const getFoodOrdered = async (foodId) => {

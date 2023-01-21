@@ -164,11 +164,21 @@ app.get('/leckerlog/:id', async (req, res) => {
 })
 
 // delete food for user
-app.delete('/food/:id/:foodId', async (req, res) => {
+app.delete('/food/delete', async (req, res) => {
     try {
-        const { id, foodId } = req.params;
-        const restaurants = await db.deleteFoodOrdered(id, foodId);
-        res.send(restaurants.rows);
+        const { foodId, imagePath } = req.query;
+        client.removeObject('images', imagePath, function(err) {
+            if (err) {
+            logger('Unable to remove object', err)
+            res.status(500).json(err)
+            }
+            console.log('Removed the object')
+          })
+        const restaurants = await db.deleteFoodOrdered(foodId);
+        res.status(200).json({
+            message: 'Record deleted',
+            data: restaurants.rows
+        });
     } catch (error) {
         console.log(error)
         res.status(500).send({
