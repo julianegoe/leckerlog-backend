@@ -290,6 +290,7 @@ app.post('/upload', upload.single("file"), async (req, res) => {
     if (file) {
         const image = sharp(file.path);
         image
+            .rotate()
             .resize(1500, 1500, {
                 fit: 'outside',
             })
