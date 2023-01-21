@@ -10,7 +10,6 @@ const findUserByEmail = async (email) => {
 }
 
 const findUserById = async (user_id) => {
-    console.log(user_id)
     return await pool.query(`SELECT * from users WHERE user_id = $1;`, [user_id])
 }
 
@@ -73,18 +72,29 @@ const deleteFoodOrdered = async (userId, foodId) => {
     return await pool.query('DELETE from food_ordered WHERE user_id = $1 and food_id = $2 RETURNING *', [userId, foodId]);
 }
 
-const getFoodOrdered = async (userId, foodId) => {
-    const food = await pool.query('SELECT * from food_ordered WHERE user_id = $1 and food_id = $2', [userId, foodId]);
-    const restaurant = await pool.query('SELECT * from restaurants WHERE restaurant_id = (SELECT restaurant_id from food_ordered WHERE food_id = $1 and user_id = $2 )', [foodId, userId]);
-    return {
-        food,
-        restaurant,
-    }
+const getFoodOrdered = async (foodId) => {
+    return await pool.query(`SELECT food_ordered.*, restaurants.name as restaurant_name, cuisines.name as cuisine
+    FROM food_ordered
+    JOIN restaurants ON restaurants.restaurant_id = food_ordered.restaurant_id
+    JOIN cuisines ON cuisines.cuisine_id = food_ordered.cuisine_id
+    WHERE food_ordered.food_id = $1
+    `, [foodId]);
 }
 
-const updateFoodOrdered = async (name, cuisines_id, rating, comment, tags, food_id, user_id, date_updated) => {
-    const updatedFood = await pool.query('UPDATE food_ordered SET name = $1, cuisine_id = $2, rating = $3, comment = $4, tags = $5, date_updated = $8 WHERE food_id = $6 and user_id = $7 RETURNING *;',
-        [name, cuisines_id, rating, comment, tags, food_id, user_id, date_updated]);
+const getAllFoodOrdered = async (userId) => {
+    const food = await pool.query(`SELECT food_ordered.*, restaurants.name as restaurant_name, cuisines.name as cuisine
+    FROM food_ordered
+    JOIN restaurants ON restaurants.restaurant_id = food_ordered.restaurant_id
+    JOIN cuisines ON cuisines.cuisine_id = food_ordered.cuisine_id
+    WHERE food_ordered.user_id = $1
+    ORDER BY food_ordered.ordered_at DESC;
+    `, [userId]);
+    return { food }
+}
+
+const updateFoodOrdered = async (name, cuisines_id, rating, comment, tags, food_id, date_updated) => {
+    const updatedFood = await pool.query('UPDATE food_ordered SET name = $1, cuisine_id = $2, rating = $3, comment = $4, tags = $5, date_updated = $7 WHERE food_id = $6 RETURNING *;',
+        [name, cuisines_id, rating, comment, tags, food_id, date_updated]);
     const restaurant = await pool.query('SELECT * from restaurants WHERE restaurant_id = (SELECT restaurant_id from food_ordered WHERE food_id = $1)', [food_id]);
     return {
         updatedFood,
@@ -125,6 +135,7 @@ module.exports = {
     addFoodOrdered,
     deleteFoodOrdered,
     getFoodOrdered,
+    getAllFoodOrdered,
     updateFoodOrdered,
     updateRestaurantCuisine,
     queryFoods,

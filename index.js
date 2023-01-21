@@ -177,15 +177,12 @@ app.delete('/food/:id/:foodId', async (req, res) => {
     }
 });
 
-// get food ordered
-app.get('/food/:foodId/:id', async (req, res) => {
+// get one food ordered for id
+app.get('/food/details', async (req, res) => {
+    const { foodId } = req.query;
     try {
-        const { id, foodId } = req.params;
-        const record = await db.getFoodOrdered(id, foodId);
-        res.send({
-            ...record.restaurant.rows,
-            food_ordered: record.food.rows,
-        });
+        const record = await db.getFoodOrdered(foodId);
+        res.status(200).json(record.rows[0]);
     } catch (error) {
         console.log(error)
         res.status(500).send({
@@ -194,21 +191,35 @@ app.get('/food/:foodId/:id', async (req, res) => {
     }
 });
 
+// get all food ordered for user
+app.get('/food/:id', async (req, res) => {
+    try {
+        const { id } = req.params;
+        const record = await db.getAllFoodOrdered(id);
+        res.status(200).json([...record.food.rows]);
+    } catch (error) {
+        console.log(error)
+        res.status(500).json({
+            message: error.message || "Some error occurred.",
+        });
+    }
+});
+
 //update food ordered
-app.post('/food/:foodId/:userId', async (req, res) => {
+app.post('/food/update/:foodId', async (req, res) => {
     try {
         const { name, rating, comment, cuisine_id, tags, restaurantName } = req.body;
-        const { userId, foodId } = req.params;
+        const { foodId } = req.params;
         const date_updated = new Date().toISOString().split('T')[0];
-        const foodOrdered = await db.updateFoodOrdered(name, cuisine_id, rating, comment, tags, foodId, userId, date_updated);
-        await db.updateRestaurantCuisine(cuisine_id, restaurantName, userId, date_updated);
-        res.send({
+        const foodOrdered = await db.updateFoodOrdered(name, cuisine_id, rating, comment, tags, foodId, date_updated);
+        await db.updateRestaurantCuisine(cuisine_id, restaurantName, date_updated);
+        res.status(200).json({
             ...foodOrdered.restaurant.rows[0],
             foodOrdered: foodOrdered.updatedFood.rows,
         });
     } catch (error) {
         console.log(error)
-        res.status(500).send({
+        res.status(500).json({
             message: error.message || "Some error occurred.",
         });
     }
