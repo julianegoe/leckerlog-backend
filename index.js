@@ -285,7 +285,7 @@ app.post('/upload', upload.single("file"), async (req, res) => {
             .toBuffer((err, data, info) => {
                 if (err) res.status(500).json(err);
                 console.log(info);
-                client.putObject('images', `${uuidv4()}.${info.jpeg}`, data, info.size, function(err, objInfo) {
+                client.putObject('images', file.originalname, data, info.size, function(err, objInfo) {
                     if(err) {
                         return res.status(500).json(err);
                     }
