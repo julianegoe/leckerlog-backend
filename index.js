@@ -77,7 +77,10 @@ app.post('/register', async (req, res) => {
                 res.status(500).json(err);
             } else {
                 db.registerUser(email, hash).then((user) => {
-                    res.status(200).json(user)
+                    res.status(200).json({
+                        message: 'Registrierung erfolgreich.',
+                        user: user.rows[0]
+                    })
                 });
             }
         });
