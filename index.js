@@ -70,7 +70,6 @@ app.post('/register',
     body('password').isLength({ min: 5 })
         .withMessage('Dein Passwort muss mindestens 5 Zeichen haben.'),
     async (req, res) => {
-        console.log(req.body)
         const errors = validationResult(req);
         if (!errors.isEmpty()) {
             return res.status(400).json({ errors: errors.array() });
@@ -210,7 +209,6 @@ app.delete('/food/delete', async (req, res) => {
                 logger('Unable to remove object', err)
                 res.status(500).json(err)
             }
-            console.log('Removed the object')
         })
         const restaurants = await db.deleteFoodOrdered(foodId);
         res.status(200).json({
@@ -344,7 +342,6 @@ app.post('/upload', upload.single("file"), async (req, res) => {
             })
             .toBuffer((err, data, info) => {
                 if (err) res.status(500).json(err);
-                console.log(info);
                 client.putObject('images', file.originalname, data, info.size, function (err, objInfo) {
                     if (err) {
                         return res.status(500).json(err);
