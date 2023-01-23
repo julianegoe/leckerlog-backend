@@ -58,10 +58,9 @@ app.use('/upload', passport.authenticate('jwt', { session: false }));
 // routes
 require('./auth')(app);
 
-app.get('/', (_, res) => {
-    res.json({
-        message: 'Welcome to Leckerlog REST API',
-    })
+app.get('/', async (_, res) => {
+    const result = await sendEmail('goersch.juliane@gmail.com', 'Link', 'Test');
+    res.send(result)
 })
 
 app.post('/register',
