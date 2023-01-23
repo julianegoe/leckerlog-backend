@@ -88,7 +88,7 @@ app.post('/register',
                     res.status(500).json(err);
                 } else {
                     db.registerUser(email, hash).then((user) => {
-                        const verifyLink = `http://www.${process.env.API_URL}/verify/${user.rows[0].verify_token}/${user.rows[0].user_id}`;
+                        const verifyLink = `${process.env.API_URL}/verify/${user.rows[0].verify_token}/${user.rows[0].user_id}`;
                         sendEmail('goersch.juliane@gmail.com', 'Bestätigungslink', `<a href="${verifyLink}">${verifyLink}</a>`)
                         res.status(200).json({
                             message: 'Registrierung erfolgreich. Bitte bestätige deine E-Mail-Adresse.',
