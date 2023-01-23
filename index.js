@@ -89,7 +89,20 @@ app.post('/register',
                 } else {
                     db.registerUser(email, hash).then((user) => {
                         const verifyLink = `${process.env.API_URL}/verify/${user.rows[0].verify_token}/${user.rows[0].user_id}`;
-                        sendEmail('goersch.juliane@gmail.com', 'Bestätigungslink', `<a href="${verifyLink}">${verifyLink}</a>`)
+                        const emailTemplate = `
+                        <div>
+                            <h3>Hi ${user.rows[0].email}!</h3>
+                            <p>Danke, dass du dich bei Leckerlog registriert hast. Bitte klicke den Button, um deine E-Mail-Adresse zu bestätigen.</p>
+                            <button style="
+                            background-color: #c68aff;
+                            padding: 0.5rem;
+                            box-shadow: 2px 2px 0px 1px #000000;
+                            font-size: 1.25rem;
+                            ">
+                                <a style="text-decoration: none; color: white" href="${verifyLink}">Bestätige E-Mail-Adresse</a>
+                            </button>
+                        </div>`;
+                        sendEmail('goersch.juliane@gmail.com', 'Bitte bestätige deine E-Mail', emailTemplate)
                         res.status(200).json({
                             message: 'Registrierung erfolgreich. Bitte bestätige deine E-Mail-Adresse.',
                             user: user.rows[0],
