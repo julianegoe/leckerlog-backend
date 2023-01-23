@@ -204,7 +204,7 @@ app.get('/leckerlog/:id', async (req, res) => {
 app.delete('/food/delete', async (req, res) => {
     try {
         const { foodId, imagePath } = req.query;
-        client.removeObject('images', imagePath, function (err) {
+        client.removeObject(process.env.MINIO_IMAGE_BUCKET, imagePath, function (err) {
             if (err) {
                 logger('Unable to remove object', err)
                 res.status(500).json(err)
@@ -321,7 +321,7 @@ app.get('/tag/:id', async (req, res) => {
 
 app.get('/list', async (_, res) => {
     let data = []
-    var stream = client.listObjects('images', '', true)
+    var stream = client.listObjects(process.env.MINIO_IMAGE_BUCKET, '', true)
     stream.on('data', function (obj) { data.push(obj) })
     stream.on("end", function () {
         res.status(200).json(data)
@@ -342,7 +342,7 @@ app.post('/upload', upload.single("file"), async (req, res) => {
             })
             .toBuffer((err, data, info) => {
                 if (err) res.status(500).json(err);
-                client.putObject('images', file.originalname, data, info.size, function (err, objInfo) {
+                client.putObject(process.env.MINIO_IMAGE_BUCKET, file.originalname, data, info.size, function (err, objInfo) {
                     if (err) {
                         return res.status(500).json(err);
                     }
@@ -353,7 +353,7 @@ app.post('/upload', upload.single("file"), async (req, res) => {
 });
 
 app.get("/download", function (req, res) {
-    client.getObject('images', req.query.filename, (err, dataStream) => {
+    client.getObject(process.env.MINIO_IMAGE_BUCKET, req.query.filename, (err, dataStream) => {
         if (err) {
             res.status(404).send(err.toString())
         } else {
