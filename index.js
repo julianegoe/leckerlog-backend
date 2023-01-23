@@ -61,7 +61,7 @@ require('./auth')(app);
 app.get('/', async (_, res) => {
     const result = await sendEmail('goersch.juliane@gmail.com', 'Link', 'Test');
     res.send(result)
-})
+});
 
 app.post('/register',
     body('email').isEmail()
