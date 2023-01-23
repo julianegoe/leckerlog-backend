@@ -1,5 +1,6 @@
 require('dotenv').config();
 const express = require('express');
+const { body, validationResult } = require('express-validator');
 const bcrypt = require('bcrypt');
 const sharp = require('sharp');
 const { v4: uuidv4 } = require('uuid');
@@ -10,6 +11,7 @@ const db = require('./database');
 let logger = require('morgan');
 const morgan = require('morgan');
 const passport = require('passport');
+const sendEmail = require('./email');
 require('./passport');
 
 const app = express();
@@ -26,21 +28,21 @@ const client = new Minio.Client({
 
 var upload = multer({
     limits: { fileSize: 10 * 1000 * 1000 }, // now allowing user uploads up to 10MB
-    fileFilter: function(req, file, callback) {
-      let fileExtension = (file.originalname.split('.')[file.originalname.split('.').length-1]).toLowerCase(); // convert extension to lower case
-      if (["png", "jpg", "jpeg"].indexOf(fileExtension) === -1) {
-        return callback('Wrong file type', false);
-      }
-      file.extension = fileExtension.replace(/jpeg/i, 'jpg'); // all jpeg images to end .jpg
-      callback(null, true);
+    fileFilter: function (req, file, callback) {
+        let fileExtension = (file.originalname.split('.')[file.originalname.split('.').length - 1]).toLowerCase(); // convert extension to lower case
+        if (["png", "jpg", "jpeg"].indexOf(fileExtension) === -1) {
+            return callback('Wrong file type', false);
+        }
+        file.extension = fileExtension.replace(/jpeg/i, 'jpg'); // all jpeg images to end .jpg
+        callback(null, true);
     },
     storage: multer.diskStorage({
-      destination: '/tmp', // store in local filesystem
-      filename: function (req, file, cb) {
-        cb(null, `${uuidv4()}.${file.extension}`) // uuid
-      }
+        destination: '/tmp', // store in local filesystem
+        filename: function (req, file, cb) {
+            cb(null, `${uuidv4()}.${file.extension}`) // uuid
+        }
     })
-  });
+});
 
 // middleware
 app.use(morgan('common'));
@@ -49,6 +51,7 @@ app.use(express.json());
 
 app.use('/cuisines', passport.authenticate('jwt', { session: false }));
 app.use('/leckerlog', passport.authenticate('jwt', { session: false }));
+app.use('/food', passport.authenticate('jwt', { session: false }));
 app.use('/download', passport.authenticate('jwt', { session: false }));
 app.use('/upload', passport.authenticate('jwt', { session: false }));
 
@@ -61,31 +64,63 @@ app.get('/', (_, res) => {
     })
 })
 
-app.post('/register', async (req, res) => {
-    const { email, password } = req.body;
-    const user = await db.findUserByEmail(email);
-    if (user.rows[0]) {
-        console.log(user.rows[0]);
-        res.status(200).json({
-            message: 'User already exists.',
-            user: user.rows[0],
-        })
-    }
-    else {
-        bcrypt.hash(password, 10, function (err, hash) {
-            if (err) {
-                res.status(500).json(err);
+app.post('/register',
+    body('email').isEmail()
+        .withMessage('Das ist keine valide E-mail'),
+    body('password').isLength({ min: 5 })
+        .withMessage('Dein Passwort muss mindestens 5 Zeichen haben.'),
+    async (req, res) => {
+        console.log(req.body)
+        const errors = validationResult(req);
+        if (!errors.isEmpty()) {
+            return res.status(400).json({ errors: errors.array() });
+        }
+        const { email, password } = req.body;
+        const user = await db.findUserByEmail(email);
+        if (user.rows[0]) {
+            res.status(401).json({
+                info: 'Nutzer existiert schon.',
+                user: user.rows[0],
+            })
+        }
+        else {
+            bcrypt.hash(password, 10, function (err, hash) {
+                if (err) {
+                    res.status(500).json(err);
+                } else {
+                    db.registerUser(email, hash).then((user) => {
+                        const verifyLink = `http://www.${process.env.HOST}/verify/${user.rows[0].verify_token}/${user.rows[0].user_id}`;
+                        sendEmail('goersch.juliane@gmail.com', 'Bestätigungslink', `<a href="${verifyLink}">${verifyLink}</a>`)
+                        res.status(200).json({
+                            message: 'Registrierung erfolgreich. Bitte bestätige deine E-Mail-Adresse.',
+                            user: user.rows[0],
+                        })
+                    });
+                }
+            });
+        }
+    });
+
+app.get('/verify/:token/:user_id', async (req, res) => {
+    const { token, user_id } = req.params;
+    try {
+        const user = await db.findUserById(user_id);
+        if (user.rows[0].is_verified) {
+            res.status(304).send('User alread verified.')
+            return;
+        }
+        if (user.rows[0].verify_token === token) {
+            const user = await db.verifyUser(user_id);
+            if (user.rows[0]) {
+                res.status(301).redirect(process.env.CLIENT_URL)
             } else {
-                db.registerUser(email, hash).then((user) => {
-                    res.status(200).json({
-                        message: 'Registrierung erfolgreich.',
-                        user: user.rows[0]
-                    })
-                });
+                res.send('There was a probelem verifying this email.')
             }
-        });
+        }
+    } catch (error) {
+        res.status(500).json(error)
     }
-});
+})
 
 // get all cuisines for user
 app.get('/cuisines/:id', async (req, res) => {
@@ -170,13 +205,13 @@ app.get('/leckerlog/:id', async (req, res) => {
 app.delete('/food/delete', async (req, res) => {
     try {
         const { foodId, imagePath } = req.query;
-        client.removeObject('images', imagePath, function(err) {
+        client.removeObject('images', imagePath, function (err) {
             if (err) {
-            logger('Unable to remove object', err)
-            res.status(500).json(err)
+                logger('Unable to remove object', err)
+                res.status(500).json(err)
             }
             console.log('Removed the object')
-          })
+        })
         const restaurants = await db.deleteFoodOrdered(foodId);
         res.status(200).json({
             message: 'Record deleted',
@@ -310,14 +345,14 @@ app.post('/upload', upload.single("file"), async (req, res) => {
             .toBuffer((err, data, info) => {
                 if (err) res.status(500).json(err);
                 console.log(info);
-                client.putObject('images', file.originalname, data, info.size, function(err, objInfo) {
-                    if(err) {
+                client.putObject('images', file.originalname, data, info.size, function (err, objInfo) {
+                    if (err) {
                         return res.status(500).json(err);
                     }
-                 res.status(200).json(objInfo)
+                    res.status(200).json(objInfo)
                 });
-              })
-            };
+            })
+    };
 });
 
 app.get("/download", function (req, res) {

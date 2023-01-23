@@ -14,35 +14,38 @@ passport.use(new LocalStrategy({
 }, (email, password, callback) => {
     db.findUserByEmail(email).then((user) => {
         if (!user.rows[0]) {
-            return callback(null, false, {message: 'Incorrect username.'});
+            return callback(null, false, 'Incorrect username and/or password.');
         }
         if (user.rows[0]) {
-            bcrypt.compare(password, user.rows[0].password).then((result, error) => {
-                console.log(user.rows[0], result);
-                if (error) {
-                    return callback(null, false, {message: 'incorrect password'});
+            if (!user.rows[0].is_verified) {
+                return callback(
+                    null,
+                    false,
+                    'Diese Email ist noch nicht verifiziert. Schaue in deinem Email-Postfach nach.')
+            }
+            bcrypt.compare(password, user.rows[0].password).then((result) => {
+                if (!result) {
+                    return callback(null, false, 'incorrect password');
                 }
                 if (result) {
                     return callback(null, user.rows[0])
-                } else {
-                    return callback(null, false, {message: 'server error'});
                 }
-            }).catch(error => callback(error, false, { message: ':((('}));
+            }).catch(error => callback(error, false, { message: ':(((' }));
         };
-    }).catch(error => callback(error, false, { message: ':('}));
+    }).catch(error => callback(error, false, { message: ':(' }));
 }));
 
 // Authorize User
 passport.use(new JWTStrategy({
     jwtFromRequest: ExtractJWT.fromAuthHeaderAsBearerToken(),
     secretOrKey: process.env.JWT_SECRET
-  }, (jwtPayload, callback) => {
+}, (jwtPayload, callback) => {
     db.findUserById(jwtPayload.user_id)
-    .then((user) => {
-      return callback(null, user);
-    })
-    .catch((error) => {
-      console.log(jwtPayload);
-      return callback(error)
-    });
-  }))
+        .then((user) => {
+            return callback(null, user);
+        })
+        .catch((error) => {
+            console.log(jwtPayload);
+            return callback(error)
+        });
+}))

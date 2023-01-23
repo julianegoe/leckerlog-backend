@@ -1,4 +1,5 @@
 const Pool = require('pg').Pool;
+const crypto = require('crypto');
 
 const pool = new Pool({
     connectionString: process.env.DATABASE_URL,
@@ -13,11 +14,16 @@ const findUserById = async (user_id) => {
     return await pool.query(`SELECT * from users WHERE user_id = $1;`, [user_id])
 }
 
+const verifyUser = async (user_id) => {
+    return await pool.query(`UPDATE users SET is_verified = true WHERE user_id = $1 RETURNING *;`, [user_id])
+}
+
 const registerUser = async (email, password) => {
+    const verifyToken = crypto.randomBytes(32).toString("hex");
     return await pool.query(`
-    INSERT INTO users (email, password) 
-    VALUES ($1, $2) RETURNING *;
-    `, [email, password]);
+    INSERT INTO users (email, password, verify_token) 
+    VALUES ($1, $2, $3) RETURNING *;
+    `, [email, password, verifyToken]);
 }
 
 const getCuisinesForUser = async (userId) => {
@@ -143,4 +149,5 @@ module.exports = {
     registerUser,
     findUserByEmail,
     findUserById,
+    verifyUser,
 };
