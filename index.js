@@ -102,7 +102,7 @@ app.post('/register',
                                 <a style="text-decoration: none; color: white" href="${verifyLink}">Bestätige E-Mail-Adresse</a>
                             </button>
                         </div>`;
-                        sendEmail('goersch.juliane@gmail.com', 'Bitte bestätige deine E-Mail', emailTemplate)
+                        sendEmail(user.rows[0].email, 'Bitte bestätige deine E-Mail', emailTemplate)
                         res.status(200).json({
                             message: 'Registrierung erfolgreich. Bitte bestätige deine E-Mail-Adresse.',
                             user: user.rows[0],
