@@ -17,8 +17,11 @@ require('./passport');
 const app = express();
 app.use(cors({
     origin: ['https://prod.leckerlog.dwk.li', 'http://localhost:5173'],
+    
 }));
 
+// Compress all HTTP responses
+/* app.use(compression()); */
 
 const client = new Minio.Client({
     endPoint: process.env.MINIO_STORANGE_ENDPOINT,
@@ -361,7 +364,7 @@ app.post('/upload', upload.single("file"), async (req, res) => {
                     }
                     res.status(200).json(objInfo)
                 });
-            })
+            });
     };
 });
 

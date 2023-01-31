@@ -26,6 +26,9 @@ CREATE TABLE users(
 ALTER TABLE food_ordered
 ADD COLUMN food_id uuid DEFAULT gen_random_uuid() PRIMARY KEY
 
+ALTER TABLE restaurants ALTER COLUMN user_id uuid
+
+
 INSERT INTO users (email, password)
 VALUES ();
 
