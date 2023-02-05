@@ -14,6 +14,14 @@ const findUserById = async (user_id) => {
     return await pool.query(`SELECT * from users WHERE user_id = $1;`, [user_id])
 }
 
+const findUserByRefreshToken = async (refresh_token) => {
+    return await pool.query(`SELECT * from users WHERE refresh_token = $1;`, [refresh_token])
+}
+
+const updateRefreshToken = async (refresh_token, user_id) => {
+    return await pool.query(`UPDATE users SET refresh_token = $1 where user_id = $2 RETURNING *;`, [refresh_token, user_id])
+}
+
 const verifyUser = async (user_id) => {
     return await pool.query(`UPDATE users SET is_verified = true WHERE user_id = $1 RETURNING *;`, [user_id])
 }
@@ -149,5 +157,7 @@ module.exports = {
     registerUser,
     findUserByEmail,
     findUserById,
+    findUserByRefreshToken,
+    updateRefreshToken,
     verifyUser,
 };

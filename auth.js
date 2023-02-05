@@ -1,16 +1,32 @@
 require('dotenv').config();
 const { body, validationResult } = require('express-validator');
-const jwtSecret = process.env.JWT_SECRET;
 const jwt = require('jsonwebtoken');
 const passport = require('passport');
+const db = require('./database');
 require('./passport');
 
-let generateJWTToken = (user) => {
-    return jwt.sign(user, jwtSecret, {
-        subject: user.email,
-        expiresIn: '3d',
-        algorithm: 'HS256'
-    });
+const generateTokens = async (user) => {
+    const accessToken = jwt.sign(
+        {
+            user_id: user.user_id,
+            email: user.email,
+            password: user.password,
+        },
+        process.env.ACCESS_TOKEN_SECRET,
+        { subject: user.email, expiresIn: "15m", algorithm: 'HS256', }
+    );
+    const refreshToken = jwt.sign(
+        {
+            user_id: user.user_id,
+            email: user.email,
+            password: user.password,
+        },
+        process.env.REFRESH_TOKEN_SECRET,
+        { subject: user.email, expiresIn: "30d", algorithm: 'HS256', }
+    );
+
+    await db.updateRefreshToken(refreshToken, user.user_id);
+    return { accessToken, refreshToken }
 };
 
 module.exports = (router) => {
@@ -32,9 +48,9 @@ module.exports = (router) => {
                         user: user
                     });
                 };
-                req.login(user, { session: false }, (error) => {
-                    const token = generateJWTToken(user);
-                    return res.status(200).json({ user, token, message: 'Login erfolgreich.' });
+                req.login(user, { session: false }, async (error) => {
+                    const { accessToken, refreshToken } = await generateTokens(user);
+                    return res.status(200).json({ user, accessToken, refreshToken, message: 'Login erfolgreich.' });
                 });
             })(req, res);
         });

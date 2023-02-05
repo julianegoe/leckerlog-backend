@@ -1,5 +1,6 @@
 require('dotenv').config();
 const express = require('express');
+const jwt = require('jsonwebtoken');
 const { body, validationResult } = require('express-validator');
 const bcrypt = require('bcrypt');
 const sharp = require('sharp');
@@ -17,7 +18,7 @@ require('./passport');
 const app = express();
 app.use(cors({
     origin: ['https://prod.leckerlog.dwk.li', 'http://localhost:5173'],
-    
+
 }));
 
 // Compress all HTTP responses
@@ -29,6 +30,7 @@ const client = new Minio.Client({
     secretKey: process.env.MINIO_SECRET_KEY
 });
 
+// upload utility function
 var upload = multer({
     limits: { fileSize: 10 * 1000 * 1000 }, // now allowing user uploads up to 10MB
     fileFilter: function (req, file, callback) {
@@ -46,6 +48,34 @@ var upload = multer({
         }
     })
 });
+
+//generate access token
+let = (user, expiration, secret) => {
+    return jwt.sign(user, secret, {
+        subject: user.email,
+        expiresIn: expiration,
+        algorithm: 'HS256'
+    });
+};
+
+
+// refrsh token utility function
+const verifyRefreshToken = async (refreshToken) => {
+    const user = await db.findUserByRefreshToken(refreshToken);
+    if (!user.rows[0]) {
+        throw new Error('Invalid refresh token');
+    }
+    return jwt.verify(refreshToken, process.env.REFRESH_TOKEN_SECRET, (err, tokenDetails) => {
+        if (err) {
+            throw new Error('Invalid refresh token');
+        }
+        return {
+            tokenDetails,
+            error: false,
+            message: "Valid refresh token",
+        }
+    });
+};
 
 // middleware
 app.use(morgan('common'));
@@ -135,7 +165,30 @@ app.get('/verify/:token/:user_id', async (req, res) => {
     } catch (error) {
         res.status(500).json(error)
     }
-})
+});
+
+app.post('/auth/refresh', async (req, res) => {
+    const { refreshToken } = req.body;
+    try {
+        console.log(refreshToken);
+        const result = await verifyRefreshToken(refreshToken);
+        const accessToken = jwt.sign(
+            {
+                user_id: result.tokenDetails.user_id,
+                email: result.tokenDetails.email,
+                password: result.tokenDetails.password,
+            },
+            process.env.ACCESS_TOKEN_SECRET,
+            { subject: result.tokenDetails.email, expiresIn: "15m", algorithm: 'HS256', }
+        );
+        res.status(200).json({
+            accessToken,
+        })
+    } catch (error) {
+        console.log(error);
+        res.status(403).json(error)
+    }
+});
 
 // get all cuisines for user
 app.get('/cuisines/:id', async (req, res) => {
@@ -144,7 +197,6 @@ app.get('/cuisines/:id', async (req, res) => {
         const cuisines = await db.getCuisinesForUser(id);
         res.json(cuisines.rows);
     } catch (error) {
-        console.log(error)
         res.status(500).send({
             message: error.message || "Some error occurred.",
         });
@@ -155,11 +207,10 @@ app.get('/cuisines/:id', async (req, res) => {
 app.get('/cuisines', async (req, res) => {
     try {
         const cuisines = await db.getAllCuisines()
-        res.json(cuisines.rows);
+        res.status(200).json(cuisines.rows);
     } catch (error) {
-        console.log(error)
-        res.status(500).send({
-            message: error.message || "Some error occurred.",
+        res.status(error.status).json({
+            error: 'error',
         });
     }
 })
@@ -260,8 +311,7 @@ app.get('/food/:id', async (req, res) => {
         const record = await db.getAllFoodOrdered(id);
         res.status(200).json([...record.food.rows]);
     } catch (error) {
-        console.log(error)
-        res.status(500).json({
+        res.status(error.status).json({
             message: error.message || "Some error occurred.",
         });
     }

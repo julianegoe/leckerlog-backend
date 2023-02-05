@@ -38,11 +38,18 @@ passport.use(new LocalStrategy({
 // Authorize User
 passport.use(new JWTStrategy({
     jwtFromRequest: ExtractJWT.fromAuthHeaderAsBearerToken(),
-    secretOrKey: process.env.JWT_SECRET
+    secretOrKey: process.env.ACCESS_TOKEN_SECRET,
 }, (jwtPayload, callback) => {
     db.findUserById(jwtPayload.user_id)
         .then((user) => {
-            return callback(null, user);
+            if (user.rows[0]) {
+                return callback(null, user);
+            } else {
+                return callback(null, false, {
+                    message: 'Nutzer existier nicht.',
+                    status: 404,
+                })
+            }
         })
         .catch((error) => {
             return callback(error)
