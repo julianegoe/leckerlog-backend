@@ -13,7 +13,7 @@ const generateTokens = async (user) => {
             password: user.password,
         },
         process.env.ACCESS_TOKEN_SECRET,
-        { subject: user.email, expiresIn: "15m", algorithm: 'HS256', }
+        { subject: user.email, expiresIn: "30d", algorithm: 'HS256', }
     );
     const refreshToken = jwt.sign(
         {
